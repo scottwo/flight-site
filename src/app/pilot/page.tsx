@@ -1,4 +1,15 @@
-export default function Pilot() {
+import fs from "node:fs/promises";
+import path from "node:path";
+
+async function getStats() {
+  const p = path.join(process.cwd(), "public", "data", "stats.json");
+  const raw = await fs.readFile(p, "utf-8");
+  return JSON.parse(raw);
+}
+
+export default async function Pilot() {
+  const stats = await getStats();
+
   return (
     <div className="min-h-screen bg-[#eaf1f8] text-[#0b1f33]">
       <div className="mx-auto flex max-w-6xl flex-col gap-10 px-6 py-16">
@@ -15,23 +26,28 @@ export default function Pilot() {
         </header>
 
         <section className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          {[
-            { label: "Total time", value: "4,200+", note: "Hours logged" },
-            { label: "Pilot in Command", value: "1,800", note: "Multi-engine" },
-            { label: "Last 12 months", value: "520", note: "Recent hours" },
-            { label: "Night", value: "800", note: "Hours" },
-            { label: "IFR", value: "1,200", note: "Instrument" },
-            { label: "Cross-country", value: "2,300", note: "Hours" },
-          ].map((item) => (
-            <div
-              key={item.label}
-              className="rounded-2xl border border-[#d4e0ec] bg-white p-5 shadow-sm"
-            >
-              <p className="text-sm text-[#5d7995]">{item.label}</p>
-              <p className="text-3xl font-semibold text-[#0f2f4b]">{item.value}</p>
-              <p className="text-sm text-[#5d7995]">{item.note}</p>
-            </div>
-          ))}
+          <main className="mx-auto max-w-3xl px-6 py-16">
+            <h1 className="text-4xl font-semibold tracking-tight">Pilot</h1>
+
+            <section className="mt-10 grid gap-4 sm:grid-cols-2">
+              <div className="rounded-2xl border p-5">
+                <div className="text-sm text-neutral-500">Total Time</div>
+                <div className="mt-2 text-3xl font-semibold">{stats.totals.total}</div>
+              </div>
+              <div className="rounded-2xl border p-5">
+                <div className="text-sm text-neutral-500">PIC</div>
+                <div className="mt-2 text-3xl font-semibold">{stats.totals.pic}</div>
+              </div>
+              <div className="rounded-2xl border p-5">
+                <div className="text-sm text-neutral-500">Dual</div>
+                <div className="mt-2 text-3xl font-semibold">{stats.totals.dual}</div>
+              </div>
+              <div className="rounded-2xl border p-5">
+                <div className="text-sm text-neutral-500">Last 90 days</div>
+                <div className="mt-2 text-3xl font-semibold">{stats.last90.total}</div>
+              </div>
+            </section>
+          </main>
         </section>
 
         <section className="grid gap-6 lg:grid-cols-2">
