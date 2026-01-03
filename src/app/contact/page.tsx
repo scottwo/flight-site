@@ -9,18 +9,12 @@ export default function Contact() {
           <h1 className="text-4xl font-semibold text-[#0b1f33] sm:text-5xl">
             Schedule a conversation
           </h1>
-          <p className="max-w-2xl text-base text-[#4b647c] sm:text-lg">
-            Add your real contact details here. This page keeps it easy for recruiters to reach you quickly.
-          </p>
         </header>
 
         <div className="grid gap-8 md:grid-cols-2">
           <div className="space-y-6 rounded-3xl border border-[#d4e0ec] bg-white p-8 shadow-sm">
             <div className="space-y-2">
               <h2 className="text-2xl font-semibold text-[#0b1f33]">Get in touch</h2>
-              <p className="text-sm text-[#4b647c]">
-                Replace the placeholders with your preferred email and phone. The form is presentational only.
-              </p>
             </div>
 
             <form className="space-y-4">
@@ -63,16 +57,16 @@ export default function Contact() {
             <h2 className="text-2xl font-semibold text-[#0b1f33]">Direct contact</h2>
             <div className="space-y-3 text-sm text-[#35506c]">
               <p className="font-semibold text-[#0b1f33]">Email</p>
-              <p>you@example.com</p>
+              <p>scott.w.ogden@gmail.com</p>
               <p className="font-semibold text-[#0b1f33]">Phone</p>
-              <p>(555) 123-4567</p>
+              <p>(503) 703-4208</p>
               <p className="font-semibold text-[#0b1f33]">Home base</p>
-              <p>Your city, state (willing to relocate)</p>
+              <p>South Jordan, UT (willing to relocate)</p>
             </div>
 
             <div className="rounded-2xl bg-[#f3f7fc] p-4 text-sm text-[#35506c]">
               <p className="font-semibold text-[#0b1f33]">Availability</p>
-              <p className="mt-1">Open for interviews and sim evals this month. Note your notice period here.</p>
+              <p className="mt-1">Open for interviews and sim evals this month.</p>
             </div>
           </div>
         </div>

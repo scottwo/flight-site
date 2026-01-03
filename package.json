@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "export:logten": "node scripts/export-logten.mjs",
+    "deploy:update": "npm run export:logten && git add public/data && git commit -m \"Update logbook stats\" && git push",
     "lint": "eslint"
   },
   "dependencies": {
@@ -19,6 +20,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "better-sqlite3": "^12.5.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
     "tailwindcss": "^4",

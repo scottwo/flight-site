@@ -1,16 +1,36 @@
 {
-  "generatedAt": "2026-01-03T04:58:11.045Z",
+  "generatedAt": "2026-01-03T06:40:25.547Z",
   "totals": {
     "total": 55.5,
     "pic": 5.2,
     "dual": 50.3,
     "night": 3.9,
+    "xc": 10.5,
+    "xcNight": 3.9,
+    "instrument": 5.9,
+    "instrumentSim": 5.9,
+    "instrumentActual": 0,
     "landings": 136,
-    "nightLandings": 10
+    "dayLandings": 126,
+    "nightLandings": 10,
+    "approaches": 0,
+    "holds": 0
   },
   "last90": {
     "total": 54.3,
-    "landings": 136
+    "pic": 5.2,
+    "dual": 49.1,
+    "night": 3.9,
+    "xc": 10.5,
+    "xcNight": 3.9,
+    "instrument": 5.9,
+    "instrumentSim": 5.9,
+    "instrumentActual": 0,
+    "landings": 136,
+    "dayLandings": 126,
+    "nightLandings": 10,
+    "approaches": 0,
+    "holds": 0
   },
   "monthly": [
     {
@@ -29,5 +49,34 @@
       "month": "2025-12",
       "total": 14.5
     }
-  ]
+  ],
+  "currency": {
+    "windows": {
+      "dayNight90dStart": "2025-10-05",
+      "dayNight90dEnd": "2026-01-03",
+      "ifr6CalMoStart": "2025-07-01",
+      "ifr6CalMoEndExclusive": "2026-01-01"
+    },
+    "day": {
+      "takeoffs": 126,
+      "landings": 126,
+      "meetsPassengerCarry": true,
+      "requirement": "≥3 takeoffs & landings in last 90 days"
+    },
+    "night": {
+      "takeoffs": 10,
+      "landings": 10,
+      "meetsPassengerCarry": true,
+      "requirement": "≥3 night takeoffs & landings in last 90 days"
+    },
+    "ifr": {
+      "approaches": 0,
+      "holds": 0,
+      "instrument": 5.9,
+      "instrumentSim": 5.9,
+      "instrumentActual": 0,
+      "meetsTrackedItems": false,
+      "requirement": "Instrument currency: ≥6 approaches + holding + intercept/track within preceding 6 calendar months"
+    }
+  }
 }
