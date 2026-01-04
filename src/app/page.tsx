@@ -18,12 +18,12 @@ export default async function Home() {
             </div>
           </div>
           <div className="flex flex-wrap gap-3">
-            <a
+            {/* <a
               href="/resume"
               className="inline-flex items-center justify-center rounded-full bg-[#1f4b71] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#163552] hover:shadow"
             >
               Download resume
-            </a>
+            </a> */}
             <a
               href="/contact"
               className="inline-flex items-center justify-center rounded-full border border-[#9cb6cf] bg-white px-5 py-3 text-sm font-semibold text-[#0f2f4b] transition hover:border-[#7fa0c1] hover:bg-[#f3f7fc]"

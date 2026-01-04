@@ -36,7 +36,7 @@ export default function RootLayout({
               {[
                 { href: "/", label: "Home" },
                 { href: "/pilot", label: "Pilot" },
-                { href: "/resume", label: "Resume" },
+                //{ href: "/resume", label: "Resume" },
                 { href: "/contact", label: "Contact" },
               ].map((link) => (
                 <a

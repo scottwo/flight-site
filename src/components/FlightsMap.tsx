@@ -18,7 +18,6 @@ import { isEmpty, extend as extendExtent } from "ol/extent";
 import Overlay from "ol/Overlay";
 import { unByKey } from "ol/Observable";
 import type { EventsKey } from "ol/events";
-import type { MapBrowserEvent } from "ol";
 
 export default function FlightsMap({ routes }: { routes: RouteLeg[] }) {
   const mapRef = useRef<HTMLDivElement | null>(null);
@@ -28,6 +27,7 @@ export default function FlightsMap({ routes }: { routes: RouteLeg[] }) {
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const tooltipOverlay = useRef<Overlay | null>(null);
   const hoverKey = useRef<EventsKey | EventsKey[] | null>(null);
+  const clickKey = useRef<EventsKey | EventsKey[] | null>(null);
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -93,6 +93,9 @@ export default function FlightsMap({ routes }: { routes: RouteLeg[] }) {
     return () => {
       if (hoverKey.current) {
         unByKey(hoverKey.current);
+      }
+      if (clickKey.current) {
+        unByKey(clickKey.current);
       }
       if (tooltipOverlay.current) {
         map.removeOverlay(tooltipOverlay.current);
@@ -163,13 +166,27 @@ export default function FlightsMap({ routes }: { routes: RouteLeg[] }) {
         tooltipRef.current.style.display = "none";
       }
     });
+
+    clickKey.current = map.on("click", (evt) => {
+      if (!tooltipOverlay.current || !tooltipRef.current) return;
+      const feature = map.forEachFeatureAtPixel(evt.pixel, (f) => f) as Feature | undefined;
+      if (feature && feature.getGeometry() instanceof LineString) {
+        const label = feature.get("label");
+        const count = feature.get("count");
+        tooltipRef.current.textContent = `${label} • ${count} flights`;
+        tooltipOverlay.current.setPosition(evt.coordinate);
+        tooltipRef.current.style.display = "block";
+      } else {
+        tooltipRef.current.style.display = "none";
+      }
+    });
   }, [routes]);
 
   return (
     <div className="rounded-2xl border border-[#d4e0ec] bg-white p-4 shadow-sm">
       <div
         ref={mapRef}
-        className="relative h-[420px] w-full overflow-hidden rounded-xl bg-[#eaf1f8] pointer-events-auto"
+        className="relative h-[320px] w-full overflow-hidden rounded-xl bg-[#eaf1f8] pointer-events-auto sm:h-[380px] lg:h-[420px]"
         aria-label="Flight routes map"
       />
       <p className="mt-2 text-[11px] text-[#4b647c]">

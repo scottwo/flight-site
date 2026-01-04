@@ -197,7 +197,7 @@ export default async function Pilot() {
                   <h2 className="text-2xl font-semibold text-[#0b1f33]">Currency</h2>
                   <p className="text-sm text-[#4b647c]">Pulled from your latest LogTen export.</p>
                 </div>
-                <div className="grid gap-4">
+                <div className="grid gap-4 sm:grid-cols-2">
                   {currencyItems.map((item) => (
                     <div
                       key={item.title}
@@ -248,7 +248,7 @@ export default async function Pilot() {
                       ))}
                     </div>
                     <div className="overflow-x-auto">
-                      <div className="grid grid-flow-col auto-cols-[18px] grid-rows-7 gap-1">
+                      <div className="min-w-[240px] grid grid-flow-col auto-cols-[16px] grid-rows-7 gap-1 sm:auto-cols-[18px] sm:min-w-[280px]">
                         {weeks.flatMap((week, weekIdx) =>
                           week.map((day, dayIdx) => {
                             const hours = day.entry?.hours ?? 0;
@@ -262,7 +262,7 @@ export default async function Pilot() {
                             return (
                               <div
                                 key={`${weekIdx}-${dayIdx}`}
-                                className={`h-[18px] w-[18px] rounded-sm ${cls}`}
+                                className={`h-[16px] w-[16px] rounded-sm sm:h-[18px] sm:w-[18px] ${cls}`}
                                 title={`${label} • ${formatHours(hours)} hrs • ${formatCount(flights)} flights`}
                                 aria-label={`${label} • ${formatHours(hours)} hours • ${formatCount(flights)} flights`}
                               />
