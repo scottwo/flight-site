@@ -19,7 +19,6 @@ import Overlay from "ol/Overlay";
 import { unByKey } from "ol/Observable";
 import type { EventsKey } from "ol/events";
 import type { MapBrowserEvent } from "ol";
-import MapBrowserEventType from "ol/MapBrowserEventType";
 
 export default function FlightsMap({ routes }: { routes: RouteLeg[] }) {
   const mapRef = useRef<HTMLDivElement | null>(null);
@@ -147,7 +146,7 @@ export default function FlightsMap({ routes }: { routes: RouteLeg[] }) {
       unByKey(hoverKey.current);
     }
 
-    hoverKey.current = map.on(MapBrowserEventType.POINTERMOVE, (evt: MapBrowserEvent<PointerEvent>) => {
+    hoverKey.current = map.on("pointermove", (evt) => {
       if (!tooltipOverlay.current || !tooltipRef.current) return;
       if (map.hasFeatureAtPixel(evt.pixel)) {
         const feature = map.forEachFeatureAtPixel(evt.pixel, (f) => f) as Feature | undefined;
