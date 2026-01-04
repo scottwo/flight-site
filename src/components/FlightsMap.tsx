@@ -17,7 +17,9 @@ import { Fill, Stroke, Style, Circle as CircleStyle, Text as TextStyle } from "o
 import { isEmpty, extend as extendExtent } from "ol/extent";
 import Overlay from "ol/Overlay";
 import { unByKey } from "ol/Observable";
+import type { EventsKey } from "ol/events";
 import type { MapBrowserEvent } from "ol";
+import MapBrowserEventType from "ol/MapBrowserEventType";
 
 export default function FlightsMap({ routes }: { routes: RouteLeg[] }) {
   const mapRef = useRef<HTMLDivElement | null>(null);
@@ -26,7 +28,7 @@ export default function FlightsMap({ routes }: { routes: RouteLeg[] }) {
   const airportSource = useRef(new VectorSource());
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const tooltipOverlay = useRef<Overlay | null>(null);
-  const hoverKey = useRef<ReturnType<Map["on"]> | null>(null);
+  const hoverKey = useRef<EventsKey | EventsKey[] | null>(null);
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -145,7 +147,7 @@ export default function FlightsMap({ routes }: { routes: RouteLeg[] }) {
       unByKey(hoverKey.current);
     }
 
-    hoverKey.current = map.on("pointermove", (evt: MapBrowserEvent<UIEvent>) => {
+    hoverKey.current = map.on(MapBrowserEventType.POINTERMOVE, (evt: MapBrowserEvent<PointerEvent>) => {
       if (!tooltipOverlay.current || !tooltipRef.current) return;
       if (map.hasFeatureAtPixel(evt.pixel)) {
         const feature = map.forEachFeatureAtPixel(evt.pixel, (f) => f) as Feature | undefined;

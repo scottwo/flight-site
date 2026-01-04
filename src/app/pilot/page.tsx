@@ -291,7 +291,7 @@ export default async function Pilot() {
 
             <section className="mt-12 space-y-3">
               <div>
-                <h2 className="text-2xl font-semibold text-[#0b1f33]">Route map (test data)</h2>
+                <h2 className="text-2xl font-semibold text-[#0b1f33]">Route map</h2>
                 <p className="text-sm text-[#4b647c]">
                   Segments from your sample routes export, sized by trip count.
                 </p>
