@@ -1,0 +1,110 @@
+[
+  {
+    "from": { "icao": "KPDX", "lat": 45.5898, "lon": -122.5951 },
+    "to":   { "icao": "KSLC", "lat": 40.7899, "lon": -111.9791 },
+    "count": 3,
+    "month": "2025-11"
+  },
+  {
+    "from": { "icao": "KSLC", "lat": 40.7899, "lon": -111.9791 },
+    "to":   { "icao": "KEWR", "lat": 40.6895, "lon": -74.1745 },
+    "count": 2,
+    "month": "2025-12"
+  },
+  {
+    "from": { "icao": "KSEA", "lat": 47.4502, "lon": -122.3088 },
+    "to":   { "icao": "KBOS", "lat": 42.3656, "lon": -71.0096 },
+    "count": 1,
+    "month": "2025-10"
+  },
+  {
+    "from": { "icao": "KLAX", "lat": 33.9416, "lon": -118.4085 },
+    "to":   { "icao": "KJFK", "lat": 40.6413, "lon": -73.7781 },
+    "count": 1,
+    "month": "2025-09"
+  },
+  {
+    "from": { "icao": "KDEN", "lat": 39.8561, "lon": -104.6737 },
+    "to":   { "icao": "KMIA", "lat": 25.7959, "lon": -80.2871 },
+    "count": 1,
+    "month": "2025-09"
+  },
+  {
+    "from": { "icao": "KORD", "lat": 41.9742, "lon": -87.9073 },
+    "to":   { "icao": "KSFO", "lat": 37.6213, "lon": -122.3790 },
+    "count": 1,
+    "month": "2025-10"
+  },
+  {
+    "from": { "icao": "KDFW", "lat": 32.8998, "lon": -97.0403 },
+    "to":   { "icao": "KSEA", "lat": 47.4502, "lon": -122.3088 },
+    "count": 1,
+    "month": "2025-11"
+  },
+  {
+    "from": { "icao": "KATL", "lat": 33.6407, "lon": -84.4277 },
+    "to":   { "icao": "KLAX", "lat": 33.9416, "lon": -118.4085 },
+    "count": 2,
+    "month": "2025-12"
+  },
+  {
+    "from": { "icao": "KPHX", "lat": 33.4342, "lon": -112.0116 },
+    "to":   { "icao": "KDEN", "lat": 39.8561, "lon": -104.6737 },
+    "count": 2,
+    "month": "2025-11"
+  },
+  {
+    "from": { "icao": "KIAH", "lat": 29.9902, "lon": -95.3368 },
+    "to":   { "icao": "KEWR", "lat": 40.6895, "lon": -74.1745 },
+    "count": 1,
+    "month": "2025-10"
+  },
+  {
+    "from": { "icao": "KSLC", "lat": 40.7899, "lon": -111.9791 },
+    "to":   { "icao": "KPHX", "lat": 33.4342, "lon": -112.0116 },
+    "count": 3,
+    "month": "2025-12"
+  },
+  {
+    "from": { "icao": "KSLC", "lat": 40.7899, "lon": -111.9791 },
+    "to":   { "icao": "KDEN", "lat": 39.8561, "lon": -104.6737 },
+    "count": 4,
+    "month": "2025-12"
+  },
+  {
+    "from": { "icao": "KSLC", "lat": 40.7899, "lon": -111.9791 },
+    "to":   { "icao": "KPDX", "lat": 45.5898, "lon": -122.5951 },
+    "count": 2,
+    "month": "2025-10"
+  },
+  {
+    "from": { "icao": "KMSP", "lat": 44.8848, "lon": -93.2223 },
+    "to":   { "icao": "KMCO", "lat": 28.4312, "lon": -81.3081 },
+    "count": 1,
+    "month": "2025-11"
+  },
+  {
+    "from": { "icao": "KLAS", "lat": 36.0840, "lon": -115.1537 },
+    "to":   { "icao": "KORD", "lat": 41.9742, "lon": -87.9073 },
+    "count": 1,
+    "month": "2025-10"
+  },
+  {
+    "from": { "icao": "KSAN", "lat": 32.7338, "lon": -117.1933 },
+    "to":   { "icao": "KSEA", "lat": 47.4502, "lon": -122.3088 },
+    "count": 1,
+    "month": "2025-09"
+  },
+  {
+    "from": { "icao": "KBWI", "lat": 39.1754, "lon": -76.6684 },
+    "to":   { "icao": "KSFO", "lat": 37.6213, "lon": -122.3790 },
+    "count": 1,
+    "month": "2025-12"
+  },
+  {
+    "from": { "icao": "KCLT", "lat": 35.2144, "lon": -80.9473 },
+    "to":   { "icao": "KDEN", "lat": 39.8561, "lon": -104.6737 },
+    "count": 1,
+    "month": "2025-11"
+  }
+]

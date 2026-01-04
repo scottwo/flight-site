@@ -1,4 +1,6 @@
+import FlightsMap from "@/components/FlightsMap";
 import { formatCount, formatHours, getHeatmap, getStats } from "@/lib/stats";
+import { getRoutes } from "@/lib/routes";
 
 function formatDate(date: string) {
   return new Date(date).toLocaleDateString("en-US", {
@@ -8,7 +10,7 @@ function formatDate(date: string) {
 }
 
 export default async function Pilot() {
-  const [stats, heatmap] = await Promise.all([getStats(), getHeatmap()]);
+  const [stats, heatmap, routes] = await Promise.all([getStats(), getHeatmap(), getRoutes()]);
   const { currency } = stats;
   const now = stats.generatedAt ? new Date(stats.generatedAt) : new Date();
   const start90 = new Date(now);
@@ -285,6 +287,16 @@ export default async function Pilot() {
                   </div>
                 </div>
               </div>
+            </section>
+
+            <section className="mt-12 space-y-3">
+              <div>
+                <h2 className="text-2xl font-semibold text-[#0b1f33]">Route map (test data)</h2>
+                <p className="text-sm text-[#4b647c]">
+                  Segments from your sample routes export, sized by trip count.
+                </p>
+              </div>
+              <FlightsMap routes={routes} />
             </section>
           </main>
         </section>

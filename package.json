@@ -8,10 +8,13 @@
     "start": "next start",
     "export:logten": "node scripts/export-logten.mjs",
     "deploy:update": "npm run export:logten && git add public/data && git commit -m \"Update logbook stats\" && git push",
+    "build:airport-index": "node scripts/build-airport-index.mjs",
     "lint": "eslint"
   },
   "dependencies": {
+    "arc": "^0.2.0",
     "next": "16.1.1",
+    "ol": "^10.7.0",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },

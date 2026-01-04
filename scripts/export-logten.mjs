@@ -8,6 +8,9 @@ const DB_PATH =
 
 const OUT_DIR = path.join(process.cwd(), "public", "data");
 fs.mkdirSync(OUT_DIR, { recursive: true });
+const AIRPORT_INDEX_PATH = path.join(process.cwd(), "scripts", "data", "airportIndex.json");
+const airportIndex = JSON.parse(fs.readFileSync(AIRPORT_INDEX_PATH, "utf8"));
+const unknownAirportCounts = new Map();
 
 // IMPORTANT: if LogTen is open, SQLite may be mid-write (WAL mode).
 // Best practice: close LogTen before running OR export from a snapshot.
@@ -32,6 +35,7 @@ const flights = db.prepare(`
       ARR.ZPLACE_LON                                                     AS to_lon,
       AC.ZAIRCRAFT_AIRCRAFTID                                             AS ac_reg,
       ACT.ZAIRCRAFTTYPE_TYPE                                              AS ac_type,
+      F.ZFLIGHT_REMARKS                                                   AS remarks,
 
       ZFLIGHT_TOTALTIME                                                  AS total_time_minutes,
       ifnull(round(ZFLIGHT_TOTALTIME * 10 / 60.0, 0) / 10, 0)             AS total_time,
@@ -70,7 +74,7 @@ const flights = db.prepare(`
     WHERE flt_date <= date('now')
   )
   SELECT
-    flt_date, frm, to_, frm_lat, frm_lon, to_lat, to_lon,
+    flt_date, frm, to_, frm_lat, frm_lon, to_lat, to_lon, remarks,
     ac_type, total_time, pic_time, dual_time, night_time, landings, day_landings,
     night_landings, day_takeoffs, night_takeoffs, xc_time, xc_night_time, inst_time,
     inst_sim_time, inst_actual_time, approaches, holds
@@ -78,6 +82,70 @@ const flights = db.prepare(`
   WHERE frm IS NOT NULL AND to_ IS NOT NULL
   ORDER BY flt_date;
 `).all();
+
+const extractIcaoCodesFromRemarks = (remarks) => {
+  if (!remarks) return [];
+  const matches =
+    String(remarks)
+      .toUpperCase()
+      // ICAO-ish: US K + 3, or 4 alphanumeric; filter against index to drop plain words.
+      .match(/\b(?:K[A-Z0-9]{3}|[A-Z0-9]{4})\b/g) || [];
+  const seen = new Set();
+  const ordered = [];
+  for (const code of matches) {
+    if (seen.has(code)) continue;
+    if (!airportIndex[code]) continue;
+    seen.add(code);
+    ordered.push(code);
+  }
+  return ordered;
+};
+
+const resolveAirport = (icao, fallback) => {
+  if (!icao) return null;
+  const code = icao.toUpperCase();
+  const fromIndex = airportIndex[code];
+  if (fromIndex && Number.isFinite(fromIndex.lat) && Number.isFinite(fromIndex.lon)) {
+    return { icao: code, lat: fromIndex.lat, lon: fromIndex.lon };
+  }
+  if (fallback && Number.isFinite(fallback.lat) && Number.isFinite(fallback.lon)) {
+    return { icao: code, lat: fallback.lat, lon: fallback.lon };
+  }
+  unknownAirportCounts.set(code, (unknownAirportCounts.get(code) || 0) + 1);
+  return null;
+};
+
+const legsFromFlight = (flight) => {
+  const path = [];
+  const fromIcao = flight.frm ? String(flight.frm).toUpperCase() : null;
+  const toIcao = flight.to_ ? String(flight.to_).toUpperCase() : null;
+  if (fromIcao) path.push(fromIcao);
+  const remarkCodes = extractIcaoCodesFromRemarks(flight.remarks);
+  for (const code of remarkCodes) {
+    if (path[path.length - 1] !== code) path.push(code);
+  }
+  if (toIcao && path[path.length - 1] !== toIcao) {
+    path.push(toIcao);
+  }
+
+  const fallback = new Map();
+  if (fromIcao && Number.isFinite(flight.frm_lat) && Number.isFinite(flight.frm_lon)) {
+    fallback.set(fromIcao, { lat: flight.frm_lat, lon: flight.frm_lon });
+  }
+  if (toIcao && Number.isFinite(flight.to_lat) && Number.isFinite(flight.to_lon)) {
+    fallback.set(toIcao, { lat: flight.to_lat, lon: flight.to_lon });
+  }
+
+  const legs = [];
+  for (let i = 0; i < path.length - 1; i++) {
+    const a = resolveAirport(path[i], fallback.get(path[i]));
+    const b = resolveAirport(path[i + 1], fallback.get(path[i + 1]));
+    if (a && b && a.icao !== b.icao) {
+      legs.push({ from: a, to: b });
+    }
+  }
+  return legs;
+};
 
 // 2) Aggregate totals
 const sum = (arr, key) => arr.reduce((a, r) => a + (Number(r[key]) || 0), 0);
@@ -209,17 +277,21 @@ const monthly = [...monthlyMap.entries()]
   .map(([month, total]) => ({ month, total: +total.toFixed(1) }));
 
 // 4) Route lines (optional map)
-const routes = flights
-  .filter((f) => f.frm_lat && f.frm_lon && f.to_lat && f.to_lon)
-  .map((f) => ({
-    date: f.flt_date,
-    from: f.frm,
-    to: f.to_,
-    fromLat: f.frm_lat,
-    fromLon: f.frm_lon,
-    toLat: f.to_lat,
-    toLon: f.to_lon,
-  }));
+const routeMap = new Map();
+for (const flight of flights) {
+  const legs = legsFromFlight(flight);
+  for (const leg of legs) {
+    const pair = [leg.from, leg.to].sort((a, b) => a.icao.localeCompare(b.icao));
+    const key = `${pair[0].icao}-${pair[1].icao}`;
+    const existing = routeMap.get(key);
+    if (existing) {
+      existing.count += 1;
+    } else {
+      routeMap.set(key, { from: pair[0], to: pair[1], count: 1 });
+    }
+  }
+}
+const routes = [...routeMap.values()];
 
 const stats = {
   generatedAt: new Date().toISOString(),
@@ -232,5 +304,12 @@ const stats = {
 fs.writeFileSync(path.join(OUT_DIR, "stats.json"), JSON.stringify(stats, null, 2));
 fs.writeFileSync(path.join(OUT_DIR, "routes.json"), JSON.stringify(routes, null, 2));
 fs.writeFileSync(path.join(OUT_DIR, "heatmap.json"), JSON.stringify(heatmap, null, 2));
+
+if (unknownAirportCounts.size > 0) {
+  console.log(
+    "Unknown airport codes (top 20):",
+    [...unknownAirportCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 20)
+  );
+}
 
 console.log("✅ Wrote public/data/stats.json and public/data/routes.json");

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-01-03T06:40:25.547Z",
+  "generatedAt": "2026-01-04T06:10:55.395Z",
   "totals": {
     "total": 55.5,
     "pic": 5.2,
@@ -52,8 +52,8 @@
   ],
   "currency": {
     "windows": {
-      "dayNight90dStart": "2025-10-05",
-      "dayNight90dEnd": "2026-01-03",
+      "dayNight90dStart": "2025-10-06",
+      "dayNight90dEnd": "2026-01-04",
       "ifr6CalMoStart": "2025-07-01",
       "ifr6CalMoEndExclusive": "2026-01-01"
     },
@@ -67,7 +67,7 @@
       "takeoffs": 10,
       "landings": 10,
       "meetsPassengerCarry": true,
-      "requirement": "≥3 night takeoffs & landings in last 90 days"
+      "requirement": "≥3 night takeoffs & landings in last 90 days (full-stop requirement not verified here)"
     },
     "ifr": {
       "approaches": 0,
@@ -76,7 +76,7 @@
       "instrumentSim": 5.9,
       "instrumentActual": 0,
       "meetsTrackedItems": false,
-      "requirement": "Instrument currency: ≥6 approaches + holding + intercept/track within preceding 6 calendar months"
+      "requirement": "Instrument currency: ≥6 approaches + holding + intercept/track within preceding 6 calendar months (intercept/track not tracked in LogTen fields here)"
     }
   }
 }
