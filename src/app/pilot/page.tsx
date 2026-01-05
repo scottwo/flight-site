@@ -1,4 +1,5 @@
 import FlightsMap from "@/components/FlightsMap";
+import FunFacts from "@/components/FunFacts";
 import { formatCount, formatHours, getHeatmap, getStats } from "@/lib/stats";
 import { getRoutes } from "@/lib/routes";
 
@@ -158,6 +159,8 @@ export default async function Pilot() {
                 </div>
               ))}
             </section>
+
+            <FunFacts facts={stats.funFacts} />
 
             {monthlyTotals.length > 0 && (
               <section className="mt-12 space-y-3">

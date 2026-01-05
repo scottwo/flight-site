@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-01-04T06:10:55.395Z",
+  "generatedAt": "2026-01-05T17:09:27.261Z",
   "totals": {
     "total": 55.5,
     "pic": 5.2,
@@ -52,8 +52,8 @@
   ],
   "currency": {
     "windows": {
-      "dayNight90dStart": "2025-10-06",
-      "dayNight90dEnd": "2026-01-04",
+      "dayNight90dStart": "2025-10-07",
+      "dayNight90dEnd": "2026-01-05",
       "ifr6CalMoStart": "2025-07-01",
       "ifr6CalMoEndExclusive": "2026-01-01"
     },
@@ -78,5 +78,77 @@
       "meetsTrackedItems": false,
       "requirement": "Instrument currency: ≥6 approaches + holding + intercept/track within preceding 6 calendar months (intercept/track not tracked in LogTen fields here)"
     }
-  }
+  },
+  "funFacts": [
+    {
+      "id": "longest_flight_time",
+      "label": "Longest flight",
+      "value": "3.9 hrs",
+      "detail": "Local",
+      "score": 6
+    },
+    {
+      "id": "furthest_leg",
+      "label": "Furthest leg",
+      "value": "128 nm",
+      "detail": "KBTF → KRIF",
+      "score": 9
+    },
+    {
+      "id": "biggest_day_hours",
+      "label": "Biggest day",
+      "value": "5.2 hrs",
+      "detail": "2025-11-11",
+      "score": 8
+    },
+    {
+      "id": "busiest_day_flights",
+      "label": "Busiest day",
+      "value": "2 flights",
+      "detail": "2025-10-17",
+      "score": 5
+    },
+    {
+      "id": "most_frequent_route",
+      "label": "Most frequent route",
+      "value": "3 legs",
+      "detail": "KBTF → KPIH",
+      "score": 9
+    },
+    {
+      "id": "unique_airports",
+      "label": "Airports visited",
+      "value": "5 airports",
+      "detail": "Most common: KBTF",
+      "score": 10
+    },
+    {
+      "id": "most_northern",
+      "label": "Farthest north",
+      "value": "42.91°N",
+      "detail": "KPIH",
+      "score": 6
+    },
+    {
+      "id": "most_southern",
+      "label": "Farthest south",
+      "value": "38.73°N",
+      "detail": "KRIF",
+      "score": 6
+    },
+    {
+      "id": "longest_streak",
+      "label": "Longest streak",
+      "value": "3 days",
+      "detail": "2025-10-16 → 2025-10-18",
+      "score": 7
+    },
+    {
+      "id": "avg_flight_duration",
+      "label": "Average flight",
+      "value": "1.7 hrs",
+      "detail": "Across 33 flights",
+      "score": 5
+    }
+  ]
 }

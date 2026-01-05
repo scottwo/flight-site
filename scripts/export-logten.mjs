@@ -12,6 +12,24 @@ const AIRPORT_INDEX_PATH = path.join(process.cwd(), "scripts", "data", "airportI
 const airportIndex = JSON.parse(fs.readFileSync(AIRPORT_INDEX_PATH, "utf8"));
 const unknownAirportCounts = new Map();
 
+const formatHours = (hrs) => `${Number(hrs || 0).toFixed(1)} hrs`;
+const formatNm = (nm) => `${Math.round(nm)} nm`;
+const deg = (lat) => `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? "N" : "S"}`;
+const toRad = (v) => (v * Math.PI) / 180;
+const haversineNm = (lat1, lon1, lat2, lon2) => {
+  const R = 6371e3; // meters
+  const phi1 = toRad(lat1);
+  const phi2 = toRad(lat2);
+  const dPhi = toRad(lat2 - lat1);
+  const dLambda = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dPhi / 2) * Math.sin(dPhi / 2) +
+    Math.cos(phi1) * Math.cos(phi2) * Math.sin(dLambda / 2) * Math.sin(dLambda / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const meters = R * c;
+  return meters / 1852; // meters -> nautical miles
+};
+
 // IMPORTANT: if LogTen is open, SQLite may be mid-write (WAL mode).
 // Best practice: close LogTen before running OR export from a snapshot.
 // Easiest: close LogTen during export.
@@ -33,6 +51,7 @@ const flights = db.prepare(`
       DEP.ZPLACE_LON                                                     AS frm_lon,
       ARR.ZPLACE_LAT                                                     AS to_lat,
       ARR.ZPLACE_LON                                                     AS to_lon,
+      NULL                                                               AS distance_nm,
       AC.ZAIRCRAFT_AIRCRAFTID                                             AS ac_reg,
       ACT.ZAIRCRAFTTYPE_TYPE                                              AS ac_type,
       F.ZFLIGHT_REMARKS                                                   AS remarks,
@@ -145,6 +164,29 @@ const legsFromFlight = (flight) => {
     }
   }
   return legs;
+};
+
+const longestConsecutiveStreak = (dates) => {
+  if (!dates.length) return { len: 0, start: null, end: null };
+  const sorted = [...dates].sort();
+  let best = { len: 1, start: sorted[0], end: sorted[0] };
+  let curLen = 1;
+  let curStart = sorted[0];
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = new Date(sorted[i - 1]);
+    const curr = new Date(sorted[i]);
+    const diffDays = (curr - prev) / (1000 * 60 * 60 * 24);
+    if (diffDays === 1) {
+      curLen += 1;
+      if (curLen > best.len) {
+        best = { len: curLen, start: curStart, end: sorted[i] };
+      }
+    } else {
+      curLen = 1;
+      curStart = sorted[i];
+    }
+  }
+  return best;
 };
 
 // 2) Aggregate totals
@@ -293,12 +335,192 @@ for (const flight of flights) {
 }
 const routes = [...routeMap.values()];
 
+// 5) Fun facts
+const funFacts = [];
+const addFact = (fact) => {
+  if (!fact || fact.value === undefined || fact.value === null) return;
+  funFacts.push(fact);
+};
+
+// Longest flight (time)
+if (flights.length) {
+  const longest = flights.reduce((best, f) => {
+    if (!f.total_time) return best;
+    if (!best || f.total_time > best.total_time) return f;
+    return best;
+  }, null);
+  if (longest && longest.total_time > 0) {
+    const detail =
+      longest.frm && longest.to_
+        ? `${longest.frm === longest.to_ ? "Local" : `${longest.frm} → ${longest.to_}`}`
+        : "Unknown route";
+    addFact({
+      id: "longest_flight_time",
+      label: "Longest flight",
+      value: formatHours(longest.total_time),
+      detail,
+      score: 6,
+    });
+  }
+}
+
+// Furthest leg (distance)
+const distanceLeg = routes.reduce(
+  (best, r) => {
+    const dist = haversineNm(r.from.lat, r.from.lon, r.to.lat, r.to.lon);
+    if (!best || dist > best.dist) return { dist, route: r };
+    return best;
+  },
+  flights.reduce((best, f) => {
+    if (!f.frm_lat || !f.frm_lon || !f.to_lat || !f.to_lon) return best;
+    const dist = haversineNm(f.frm_lat, f.frm_lon, f.to_lat, f.to_lon);
+    if (!best || dist > best.dist) return { dist, route: { from: { icao: f.frm, lat: f.frm_lat, lon: f.frm_lon }, to: { icao: f.to_, lat: f.to_lat, lon: f.to_lon } } };
+    return best;
+  }, null)
+);
+if (distanceLeg && distanceLeg.dist > 0) {
+  addFact({
+    id: "furthest_leg",
+    label: "Furthest leg",
+    value: formatNm(distanceLeg.dist),
+    detail: `${distanceLeg.route.from.icao} → ${distanceLeg.route.to.icao}`,
+    score: 9,
+  });
+}
+
+// Biggest day (hours)
+const biggestDay = heatmap.reduce(
+  (best, d) => (!best || d.hours > best.hours ? d : best),
+  null
+);
+if (biggestDay && biggestDay.hours > 0) {
+  addFact({
+    id: "biggest_day_hours",
+    label: "Biggest day",
+    value: formatHours(biggestDay.hours),
+    detail: biggestDay.date,
+    score: 8,
+  });
+}
+
+// Busiest day (flights)
+const busiestDay = heatmap.reduce(
+  (best, d) => (!best || d.flights > best.flights ? d : best),
+  null
+);
+if (busiestDay && busiestDay.flights > 0) {
+  addFact({
+    id: "busiest_day_flights",
+    label: "Busiest day",
+    value: `${busiestDay.flights} flights`,
+    detail: busiestDay.date,
+    score: 5,
+  });
+}
+
+// Most frequent route
+const topRoute = routes.reduce((best, r) => (!best || r.count > best.count ? r : best), null);
+if (topRoute && topRoute.count > 0) {
+  addFact({
+    id: "most_frequent_route",
+    label: "Most frequent route",
+    value: `${topRoute.count} legs`,
+    detail: `${topRoute.from.icao} → ${topRoute.to.icao}`,
+    score: 9,
+  });
+}
+
+// Unique airports visited
+const visitedAirports = new Set();
+flights.forEach((f) => {
+  if (f.frm) visitedAirports.add(f.frm);
+  if (f.to_) visitedAirports.add(f.to_);
+});
+routes.forEach((r) => {
+  visitedAirports.add(r.from.icao);
+  visitedAirports.add(r.to.icao);
+});
+const airportCounts = {};
+flights.forEach((f) => {
+  if (f.frm) airportCounts[f.frm] = (airportCounts[f.frm] || 0) + 1;
+  if (f.to_) airportCounts[f.to_] = (airportCounts[f.to_] || 0) + 1;
+});
+const mostCommonAirport =
+  Object.entries(airportCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+if (visitedAirports.size > 0) {
+  addFact({
+    id: "unique_airports",
+    label: "Airports visited",
+    value: `${visitedAirports.size} airports`,
+    detail: mostCommonAirport ? `Most common: ${mostCommonAirport}` : undefined,
+    score: 10,
+  });
+}
+
+// Most northern / southern airport
+let mostNorth = null;
+let mostSouth = null;
+visitedAirports.forEach((icao) => {
+  const apt = airportIndex[icao];
+  if (apt && Number.isFinite(apt.lat)) {
+    if (!mostNorth || apt.lat > mostNorth.lat) mostNorth = { icao, lat: apt.lat };
+    if (!mostSouth || apt.lat < mostSouth.lat) mostSouth = { icao, lat: apt.lat };
+  }
+});
+if (mostNorth) {
+  addFact({
+    id: "most_northern",
+    label: "Farthest north",
+    value: deg(mostNorth.lat),
+    detail: mostNorth.icao,
+    score: 6,
+  });
+}
+if (mostSouth) {
+  addFact({
+    id: "most_southern",
+    label: "Farthest south",
+    value: deg(mostSouth.lat),
+    detail: mostSouth.icao,
+    score: 6,
+  });
+}
+
+// Longest flying streak
+const streakDates = heatmap.filter((d) => d.flights > 0).map((d) => d.date);
+const streak = longestConsecutiveStreak(streakDates);
+if (streak.len > 1) {
+  addFact({
+    id: "longest_streak",
+    label: "Longest streak",
+    value: `${streak.len} days`,
+    detail: `${streak.start} → ${streak.end}`,
+    score: 7,
+  });
+}
+
+// Average flight duration
+if (flights.length) {
+  const totalHrs = sum(flights, "total_time");
+  const avg = totalHrs / flights.length;
+  if (avg > 0) {
+    addFact({
+      id: "avg_flight_duration",
+      label: "Average flight",
+      value: formatHours(avg),
+      detail: `Across ${flights.length} flights`,
+      score: 5,
+    });
+  }
+}
+
 const stats = {
   generatedAt: new Date().toISOString(),
   totals,
   last90: last90Totals,
   monthly,
   currency,
+  funFacts,
 };
 
 fs.writeFileSync(path.join(OUT_DIR, "stats.json"), JSON.stringify(stats, null, 2));
