@@ -52,7 +52,7 @@ export default function FlightsMap({ routes }: { routes: RouteLeg[] }) {
             if (c <= q1) tier = "thin";
             else if (c <= q2) tier = "med";
 
-            const width = Math.min(tier === "thin" ? 2 : tier === "med" ? 4 : 6, 6);
+            const width = Math.min(tier === "thin" ? 1 : tier === "med" ? 2 : 3, 3);
             if (!routeStyleCache.current[tier]) {
               routeStyleCache.current[tier] = new Style({
                 stroke: new Stroke({
