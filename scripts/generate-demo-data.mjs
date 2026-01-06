@@ -156,6 +156,9 @@ function generateFlights(targetFlights = 240) {
       const { from, to } = pickRoute();
       const distNm = haversineNm(from.lat, from.lon, to.lat, to.lon);
       const total_time = durationFromDistance(distNm);
+      const pic_share = range(0.4, 0.9); // vary PIC portion per flight
+      const pic_time = round1(total_time * pic_share);
+      const sic_time = round1(Math.max(0, total_time - pic_time));
 
       const nightFlight = rand() < 0.28;
       const night_time = nightFlight ? round1(total_time * range(0.2, 0.6)) : 0;
@@ -176,7 +179,8 @@ function generateFlights(targetFlights = 240) {
         remarks: "Demo flight",
         ac_type: rand() < 0.6 ? "A320" : "B737",
         total_time,
-        pic_time: round1(total_time * 0.9),
+        pic_time,
+        sic_time,
         dual_time: 0,
         night_time,
         landings: 1,
@@ -200,6 +204,9 @@ function generateFlights(targetFlights = 240) {
     const { from, to } = pickRoute();
     const distNm = haversineNm(from.lat, from.lon, to.lat, to.lon);
     const total_time = durationFromDistance(distNm);
+    const pic_share = range(0.4, 0.9);
+    const pic_time = round1(total_time * pic_share);
+    const sic_time = round1(Math.max(0, total_time - pic_time));
     const nightFlight = rand() < 0.28;
     const dayOffset = Math.floor(range(0, 210));
     const date = new Date(start);
@@ -217,7 +224,8 @@ function generateFlights(targetFlights = 240) {
       remarks: "Demo flight",
       ac_type: rand() < 0.6 ? "A320" : "B737",
       total_time,
-      pic_time: round1(total_time * 0.9),
+      pic_time,
+      sic_time,
       dual_time: 0,
       night_time: nightFlight ? round1(total_time * range(0.2, 0.6)) : 0,
       landings: 1,
@@ -302,14 +310,15 @@ function aggregate(flights) {
     return d >= startOfSixCalendarMonthsAgo && d < startOfThisMonth;
   });
 
-  const totals = {
-    total: +sum(flights, "total_time").toFixed(1),
-    pic: +sum(flights, "pic_time").toFixed(1),
-    dual: +sum(flights, "dual_time").toFixed(1),
-    night: +sum(flights, "night_time").toFixed(1),
-    xc: +sum(flights, "xc_time").toFixed(1),
-    xcNight: +sum(flights, "xc_night_time").toFixed(1),
-    instrument: +sum(flights, "inst_time").toFixed(1),
+const totals = {
+  total: +sum(flights, "total_time").toFixed(1),
+  pic: +sum(flights, "pic_time").toFixed(1),
+  sic: +sum(flights, "sic_time").toFixed(1),
+  dual: +sum(flights, "dual_time").toFixed(1),
+  night: +sum(flights, "night_time").toFixed(1),
+  xc: +sum(flights, "xc_time").toFixed(1),
+  xcNight: +sum(flights, "xc_night_time").toFixed(1),
+  instrument: +sum(flights, "inst_time").toFixed(1),
     instrumentSim: +sum(flights, "inst_sim_time").toFixed(1),
     instrumentActual: +sum(flights, "inst_actual_time").toFixed(1),
     landings: flights.reduce((a, r) => a + (r.landings || 0), 0),
@@ -319,14 +328,15 @@ function aggregate(flights) {
     holds: flights.reduce((a, r) => a + (r.holds || 0), 0),
   };
 
-  const last90Totals = {
-    total: +sum(last90Flights, "total_time").toFixed(1),
-    pic: +sum(last90Flights, "pic_time").toFixed(1),
-    dual: +sum(last90Flights, "dual_time").toFixed(1),
-    night: +sum(last90Flights, "night_time").toFixed(1),
-    xc: +sum(last90Flights, "xc_time").toFixed(1),
-    xcNight: +sum(last90Flights, "xc_night_time").toFixed(1),
-    instrument: +sum(last90Flights, "inst_time").toFixed(1),
+const last90Totals = {
+  total: +sum(last90Flights, "total_time").toFixed(1),
+  pic: +sum(last90Flights, "pic_time").toFixed(1),
+  sic: +sum(last90Flights, "sic_time").toFixed(1),
+  dual: +sum(last90Flights, "dual_time").toFixed(1),
+  night: +sum(last90Flights, "night_time").toFixed(1),
+  xc: +sum(last90Flights, "xc_time").toFixed(1),
+  xcNight: +sum(last90Flights, "xc_night_time").toFixed(1),
+  instrument: +sum(last90Flights, "inst_time").toFixed(1),
     instrumentSim: +sum(last90Flights, "inst_sim_time").toFixed(1),
     instrumentActual: +sum(last90Flights, "inst_actual_time").toFixed(1),
     landings: last90Flights.reduce((a, r) => a + (r.landings || 0), 0),

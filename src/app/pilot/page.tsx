@@ -10,11 +10,25 @@ function formatDate(date: string) {
   });
 }
 
-export async function PilotProfilePage({ dataDir = "data" }: { dataDir?: string } = {}) {
+type StatsType = Awaited<ReturnType<typeof getStats>>;
+type HeatmapType = Awaited<ReturnType<typeof getHeatmap>>;
+type RoutesType = Awaited<ReturnType<typeof getRoutes>>;
+
+export async function PilotProfilePage({
+  dataDir = "data",
+  statsOverride,
+  heatmapOverride,
+  routesOverride,
+}: {
+  dataDir?: string;
+  statsOverride?: StatsType;
+  heatmapOverride?: HeatmapType;
+  routesOverride?: RoutesType;
+} = {}) {
   const [stats, heatmap, routes] = await Promise.all([
-    getStats(dataDir),
-    getHeatmap(dataDir),
-    getRoutes("routes.json", dataDir),
+    statsOverride ?? getStats(dataDir),
+    heatmapOverride ?? getHeatmap(dataDir),
+    routesOverride ?? getRoutes("routes.json", dataDir),
   ]);
   const { currency } = stats;
   const now = stats.generatedAt ? new Date(stats.generatedAt) : new Date();
@@ -34,7 +48,7 @@ export async function PilotProfilePage({ dataDir = "data" }: { dataDir?: string 
     {
       label: "PIC",
       value: `${formatHours(stats.totals.pic)} hrs`,
-      helper: `${formatHours(stats.totals.dual)} SIC/dual`,
+      helper: `${formatHours(stats.totals.sic)} SIC`,
     },
     {
       label: "Night",
