@@ -30,6 +30,8 @@ export async function PilotProfilePage({
     heatmapOverride ?? getHeatmap(dataDir),
     routesOverride ?? getRoutes("routes.json", dataDir),
   ]);
+
+  const sicHours = (stats.totals as { sic?: number }).sic ?? 0;
   const { currency } = stats;
   const now = stats.generatedAt ? new Date(stats.generatedAt) : new Date();
   const start90 = new Date(now);
@@ -48,7 +50,7 @@ export async function PilotProfilePage({
     {
       label: "PIC",
       value: `${formatHours(stats.totals.pic)} hrs`,
-      helper: `${formatHours(stats.totals.sic)} SIC`,
+      helper: `${formatHours(sicHours)} SIC`,
     },
     {
       label: "Night",

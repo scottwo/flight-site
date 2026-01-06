@@ -32,6 +32,7 @@ type Flight = {
 };
 
 const demoDir = path.join(process.cwd(), "public", "demo-data");
+type AirportLat = { icao: string; lat: number };
 
 const sum = (arr: Flight[], key: keyof Flight) =>
   arr.reduce((a, r) => a + (Number(r[key]) || 0), 0);
@@ -286,8 +287,8 @@ function aggregate(flights: Flight[]) {
     latLookup.set(f.to_, f.to_lat);
   });
 
-  let mostNorth: { icao: string; lat: number } | null = null;
-  let mostSouth: { icao: string; lat: number } | null = null;
+  let mostNorth: AirportLat | null = null;
+  let mostSouth: AirportLat | null = null;
   visitedAirports.forEach((icao) => {
     const lat = latLookup.get(icao);
     if (lat === undefined || lat === null) return;
@@ -295,20 +296,22 @@ function aggregate(flights: Flight[]) {
     if (!mostSouth || lat < mostSouth.lat) mostSouth = { icao, lat };
   });
   if (mostNorth) {
+    const north: AirportLat = mostNorth;
     funFacts.push({
       id: "most_northern",
       label: "Farthest north",
-      value: deg(mostNorth.lat),
-      detail: mostNorth.icao,
+      value: deg(north.lat),
+      detail: north.icao,
       score: 6,
     });
   }
   if (mostSouth) {
+    const south: AirportLat = mostSouth;
     funFacts.push({
       id: "most_southern",
       label: "Farthest south",
-      value: deg(mostSouth.lat),
-      detail: mostSouth.icao,
+      value: deg(south.lat),
+      detail: south.icao,
       score: 6,
     });
   }
