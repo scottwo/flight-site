@@ -1,16 +1,13 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import {
+  ClerkProvider,
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  SignUpButton,
+  UserButton,
+} from "@clerk/nextjs";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Pilot Resume",
@@ -23,35 +20,54 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#eaf1f8] text-[#0b1f33]`}
-      >
-        <header className="sticky top-0 z-50 border-b border-[#d4e0ec] bg-white/85 backdrop-blur">
-          <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-            <a href="/" className="text-lg font-semibold text-[#0f2f4b]">
-              Flight Deck Profile
-            </a>
-            <nav className="flex items-center gap-2 text-sm font-semibold text-[#0f2f4b]">
-              {[
-                { href: "/", label: "Home" },
-                { href: "/pilot", label: "Pilot" },
-                //{ href: "/resume", label: "Resume" },
-                { href: "/contact", label: "Contact" },
-              ].map((link) => (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  className="rounded-full px-4 py-2 transition hover:bg-[#e6eef7] hover:text-[#1f4b71]"
-                >
-                  {link.label}
-                </a>
-              ))}
-            </nav>
-          </div>
-        </header>
-        {children}
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" suppressHydrationWarning>
+        <body
+          className="antialiased bg-[#eaf1f8] text-[#0b1f33]"
+        >
+          <header className="sticky top-0 z-50 border-b border-[#d4e0ec] bg-white/85 backdrop-blur">
+            <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+              <a href="/" className="text-lg font-semibold text-[#0f2f4b]">
+                Flight Deck Profile
+              </a>
+              <nav className="flex items-center gap-2 text-sm font-semibold text-[#0f2f4b]">
+                {[
+                  { href: "/", label: "Home" },
+                  { href: "/pilot", label: "Pilot" },
+                  //{ href: "/resume", label: "Resume" },
+                  { href: "/contact", label: "Contact" },
+                ].map((link) => (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    className="rounded-full px-4 py-2 transition hover:bg-[#e6eef7] hover:text-[#1f4b71]"
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </nav>
+              <div className="flex items-center gap-3">
+                <SignedOut>
+                  <SignInButton mode="modal">
+                    <button className="rounded-full border border-[#d4e0ec] px-4 py-2 text-sm font-semibold text-[#0f2f4b] transition hover:bg-[#e6eef7] hover:text-[#1f4b71]">
+                      Sign in
+                    </button>
+                  </SignInButton>
+                  <SignUpButton mode="modal">
+                    <button className="rounded-full bg-[#1f4b71] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#163552]">
+                      Sign up
+                    </button>
+                  </SignUpButton>
+                </SignedOut>
+                <SignedIn>
+                  <UserButton appearance={{ elements: { userButtonAvatarBox: "ring-2 ring-[#1f4b71]" } }} />
+                </SignedIn>
+              </div>
+            </div>
+          </header>
+          {children}
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

@@ -396,7 +396,7 @@ const biggestDay = heatmap.reduce(
 if (biggestDay && biggestDay.hours > 0) {
   addFact({
     id: "biggest_day_hours",
-    label: "Biggest day",
+    label: "Longest day",
     value: formatHours(biggestDay.hours),
     detail: biggestDay.date,
     score: 8,
@@ -452,7 +452,7 @@ if (visitedAirports.size > 0) {
     id: "unique_airports",
     label: "Airports visited",
     value: `${visitedAirports.size} airports`,
-    detail: mostCommonAirport ? `Most common: ${mostCommonAirport}` : undefined,
+    detail: mostCommonAirport ? `Most common: ${mostCommonAirport} (${airportCounts[mostCommonAirport]} times)` : undefined,
     score: 10,
   });
 }
