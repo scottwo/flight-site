@@ -1,7 +1,6 @@
 export const runtime = "nodejs";
 
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 
@@ -78,10 +77,8 @@ export async function POST() {
         },
       });
     } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2002"
-      ) {
+      const code = (error as { code?: string }).code;
+      if (code === "P2002") {
         const fallbackHandle = await generateUniqueHandle(
           `${userId}-${Date.now()}`,
         );
