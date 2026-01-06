@@ -10,8 +10,12 @@ function formatDate(date: string) {
   });
 }
 
-export default async function Pilot() {
-  const [stats, heatmap, routes] = await Promise.all([getStats(), getHeatmap(), getRoutes()]);
+export async function PilotProfilePage({ dataDir = "data" }: { dataDir?: string } = {}) {
+  const [stats, heatmap, routes] = await Promise.all([
+    getStats(dataDir),
+    getHeatmap(dataDir),
+    getRoutes("routes.json", dataDir),
+  ]);
   const { currency } = stats;
   const now = stats.generatedAt ? new Date(stats.generatedAt) : new Date();
   const start90 = new Date(now);
@@ -30,12 +34,12 @@ export default async function Pilot() {
     {
       label: "PIC",
       value: `${formatHours(stats.totals.pic)} hrs`,
-      helper: `${formatCount(stats.totals.nightLandings)} night landings`,
+      helper: `${formatHours(stats.totals.dual)} SIC/dual`,
     },
     {
-      label: "Dual received",
-      value: `${formatHours(stats.totals.dual)} hrs`,
-      helper: `${formatHours(stats.totals.night)} night hrs`,
+      label: "Night",
+      value: `${formatHours(stats.totals.night)} hrs`,
+      helper: `${formatCount(stats.totals.nightLandings)} night landings`,
     },
     {
       label: "Last 90 days",
@@ -379,4 +383,8 @@ export default async function Pilot() {
       </div>
     </div>
   );
+}
+
+export default async function Pilot() {
+  return <PilotProfilePage />;
 }

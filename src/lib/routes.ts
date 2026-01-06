@@ -8,8 +8,11 @@ export type RouteLeg = {
   month: string;
 };
 
-export async function getRoutes(fileName = "routes.json"): Promise<RouteLeg[]> {
-  const filePath = path.join(process.cwd(), "public", "data", fileName);
+export async function getRoutes(
+  fileName = "routes.json",
+  baseDir = "data",
+): Promise<RouteLeg[]> {
+  const filePath = path.join(process.cwd(), "public", baseDir, fileName);
   const raw = await fs.readFile(filePath, "utf-8");
   return JSON.parse(raw) as RouteLeg[];
 }

@@ -10,8 +10,8 @@ import {
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Pilot Resume",
-  description: "Professional pilot profile and flight resume",
+  title: "Flight Deck Profile",
+  description: "Pilot profiles, dashboards, and public pages.",
 };
 
 export default function RootLayout({
@@ -31,20 +31,26 @@ export default function RootLayout({
                 Flight Deck Profile
               </a>
               <nav className="flex items-center gap-2 text-sm font-semibold text-[#0f2f4b]">
-                {[
-                  { href: "/", label: "Home" },
-                  { href: "/pilot", label: "Pilot" },
-                  //{ href: "/resume", label: "Resume" },
-                  { href: "/contact", label: "Contact" },
-                ].map((link) => (
+                <a
+                  href="/"
+                  className="rounded-full px-4 py-2 transition hover:bg-[#e6eef7] hover:text-[#1f4b71]"
+                >
+                  Home
+                </a>
+                <a
+                  href="/p/demo"
+                  className="rounded-full px-4 py-2 transition hover:bg-[#e6eef7] hover:text-[#1f4b71]"
+                >
+                  Demo
+                </a>
+                <SignedIn>
                   <a
-                    key={link.href}
-                    href={link.href}
+                    href="/dashboard"
                     className="rounded-full px-4 py-2 transition hover:bg-[#e6eef7] hover:text-[#1f4b71]"
                   >
-                    {link.label}
+                    Dashboard
                   </a>
-                ))}
+                </SignedIn>
               </nav>
               <div className="flex items-center gap-3">
                 <SignedOut>
@@ -66,6 +72,21 @@ export default function RootLayout({
             </div>
           </header>
           {children}
+          <footer className="mt-12 border-t border-[#d4e0ec] bg-white/80">
+            <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-6 py-6 text-sm text-[#35506c]">
+              <a href="/" className="hover:text-[#1f4b71]">
+                Home
+              </a>
+              <span className="text-[#9cb6cf]">•</span>
+              <a href="/privacy" className="hover:text-[#1f4b71]">
+                Privacy
+              </a>
+              <span className="text-[#9cb6cf]">•</span>
+              <a href="/terms" className="hover:text-[#1f4b71]">
+                Terms
+              </a>
+            </div>
+          </footer>
         </body>
       </html>
     </ClerkProvider>

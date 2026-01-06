@@ -97,3 +97,7 @@ export async function POST() {
 
   return NextResponse.json({ id: user.id, handle: profile.handle });
 }
+
+export async function GET() {
+  return POST();
+}

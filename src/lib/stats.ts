@@ -4,16 +4,18 @@ import path from "node:path";
 type Stats = typeof import("../../public/data/stats.json");
 type HeatmapEntry = typeof import("../../public/data/heatmap.json")[number];
 
-const statsPath = path.join(process.cwd(), "public", "data", "stats.json");
-const heatmapPath = path.join(process.cwd(), "public", "data", "heatmap.json");
+const statsPath = (baseDir: string) =>
+  path.join(process.cwd(), "public", baseDir, "stats.json");
+const heatmapPath = (baseDir: string) =>
+  path.join(process.cwd(), "public", baseDir, "heatmap.json");
 
-export async function getStats() {
-  const raw = await fs.readFile(statsPath, "utf-8");
+export async function getStats(baseDir = "data") {
+  const raw = await fs.readFile(statsPath(baseDir), "utf-8");
   return JSON.parse(raw) as Stats;
 }
 
-export async function getHeatmap(): Promise<HeatmapEntry[]> {
-  const raw = await fs.readFile(heatmapPath, "utf-8");
+export async function getHeatmap(baseDir = "data"): Promise<HeatmapEntry[]> {
+  const raw = await fs.readFile(heatmapPath(baseDir), "utf-8");
   return JSON.parse(raw) as HeatmapEntry[];
 }
 

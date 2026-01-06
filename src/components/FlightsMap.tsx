@@ -24,6 +24,12 @@ export default function FlightsMap({ routes }: { routes: RouteLeg[] }) {
   const mapObj = useRef<Map | null>(null);
   const routeSource = useRef(new VectorSource());
   const airportSource = useRef(new VectorSource());
+  const routeQuantiles = useRef<{ q1: number; q2: number }>({ q1: 1, q2: 2 });
+  const routeStyleCache = useRef<Record<"thin" | "med" | "thick", Style>>({
+    thin: undefined as unknown as Style,
+    med: undefined as unknown as Style,
+    thick: undefined as unknown as Style,
+  });
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const tooltipOverlay = useRef<Overlay | null>(null);
   const hoverKey = useRef<EventsKey | EventsKey[] | null>(null);
@@ -39,13 +45,26 @@ export default function FlightsMap({ routes }: { routes: RouteLeg[] }) {
         new TileLayer({ source: osmSource }),
         new VectorLayer({
           source: routeSource.current,
-          style: (feature) =>
-            new Style({
-              stroke: new Stroke({
-                color: "#1f4b71",
-                width: 1 + (feature.get("count") ?? 1) * 0.8,
-              }),
-            }),
+          style: (feature) => {
+            const c = Number(feature.get("count") ?? feature.get("trips") ?? 1);
+            const { q1, q2 } = routeQuantiles.current;
+            let tier: "thin" | "med" | "thick" = "thick";
+            if (c <= q1) tier = "thin";
+            else if (c <= q2) tier = "med";
+
+            const width = Math.min(tier === "thin" ? 2 : tier === "med" ? 4 : 6, 6);
+            if (!routeStyleCache.current[tier]) {
+              routeStyleCache.current[tier] = new Style({
+                stroke: new Stroke({
+                  color: tier === "thin" ? "rgba(31,75,113,0.6)" : "rgba(31,75,113,0.9)",
+                  width,
+                  lineCap: "round",
+                  lineJoin: "round",
+                }),
+              });
+            }
+            return routeStyleCache.current[tier];
+          },
         }),
         new VectorLayer({
           source: airportSource.current,
@@ -110,6 +129,7 @@ export default function FlightsMap({ routes }: { routes: RouteLeg[] }) {
     const map = mapObj.current;
     if (!map) return;
 
+    const features: Feature<LineString>[] = [];
     const routeFeatures: Feature<LineString>[] = routes.map((route) => {
       const coords = [
         fromLonLat([route.from.lon, route.from.lat]),
@@ -118,8 +138,20 @@ export default function FlightsMap({ routes }: { routes: RouteLeg[] }) {
       const feature = new Feature(new LineString(coords));
       feature.set("count", route.count);
       feature.set("label", `${route.from.icao} → ${route.to.icao}`);
+      features.push(feature);
       return feature;
     });
+
+    const counts = features
+      .map((f) => Number(f.get("count") ?? f.get("trips") ?? 1))
+      .filter((n) => Number.isFinite(n))
+      .sort((a, b) => a - b);
+    const quantile = (p: number) => {
+      if (!counts.length) return 1;
+      const idx = Math.floor(p * (counts.length - 1));
+      return counts[idx];
+    };
+    routeQuantiles.current = { q1: quantile(0.33), q2: quantile(0.66) };
 
     const seen = new Set<string>();
     const airportFeatures: Feature<Point>[] = [];

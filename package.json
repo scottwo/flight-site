@@ -9,6 +9,7 @@
     "build": "next build",
     "start": "next start",
     "export:logten": "node scripts/export-logten.mjs",
+    "gen:demo": "node scripts/generate-demo-data.mjs",
     "deploy:update": "npm run export:logten && git add public/data && git commit -m \"Update logbook stats\" && git push",
     "build:airport-index": "node scripts/build-airport-index.mjs",
     "lint": "eslint"

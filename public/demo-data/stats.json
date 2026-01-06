@@ -1,0 +1,166 @@
+{
+  "generatedAt": "2026-01-06T04:46:34.120Z",
+  "totals": {
+    "total": 717.6,
+    "pic": 647.3,
+    "dual": 0,
+    "night": 84,
+    "xc": 717.6,
+    "xcNight": 84,
+    "instrument": 321.8,
+    "instrumentSim": 31.9,
+    "instrumentActual": 189.6,
+    "landings": 240,
+    "dayLandings": 169,
+    "nightLandings": 71,
+    "approaches": 267,
+    "holds": 33
+  },
+  "last90": {
+    "total": 396.4,
+    "pic": 357.3,
+    "dual": 0,
+    "night": 38.5,
+    "xc": 396.4,
+    "xcNight": 38.5,
+    "instrument": 168,
+    "instrumentSim": 17.5,
+    "instrumentActual": 97.1,
+    "landings": 131,
+    "dayLandings": 99,
+    "nightLandings": 32,
+    "approaches": 145,
+    "holds": 16
+  },
+  "monthly": [
+    {
+      "month": "2025-07",
+      "total": 18.8
+    },
+    {
+      "month": "2025-08",
+      "total": 136.8
+    },
+    {
+      "month": "2025-09",
+      "total": 108.2
+    },
+    {
+      "month": "2025-10",
+      "total": 171.5
+    },
+    {
+      "month": "2025-11",
+      "total": 94.4
+    },
+    {
+      "month": "2025-12",
+      "total": 158.4
+    },
+    {
+      "month": "2026-01",
+      "total": 29.5
+    }
+  ],
+  "currency": {
+    "windows": {
+      "dayNight90dStart": "2025-10-08",
+      "dayNight90dEnd": "2026-01-06",
+      "ifr6CalMoStart": "2025-07-01",
+      "ifr6CalMoEndExclusive": "2026-01-01"
+    },
+    "day": {
+      "takeoffs": 99,
+      "landings": 99,
+      "meetsPassengerCarry": true,
+      "requirement": "≥3 takeoffs & landings in last 90 days"
+    },
+    "night": {
+      "takeoffs": 32,
+      "landings": 32,
+      "meetsPassengerCarry": true,
+      "requirement": "≥3 night takeoffs & landings in last 90 days (full-stop requirement not verified here)"
+    },
+    "ifr": {
+      "approaches": 257,
+      "holds": 32,
+      "instrument": 310.6,
+      "instrumentSim": 30.8,
+      "instrumentActual": 183.4,
+      "meetsTrackedItems": true,
+      "requirement": "Instrument currency: ≥6 approaches + holding + intercept/track within preceding 6 calendar months (intercept/track not tracked in demo)"
+    }
+  },
+  "funFacts": [
+    {
+      "id": "longest_flight_time",
+      "label": "Longest flight",
+      "value": "5.0 hrs",
+      "detail": "KSLC → KIAD",
+      "score": 6
+    },
+    {
+      "id": "furthest_leg",
+      "label": "Furthest leg",
+      "value": "2179 nm",
+      "detail": "KLGA → KSMF",
+      "score": 9
+    },
+    {
+      "id": "biggest_day_hours",
+      "label": "Longest day",
+      "value": "13.5 hrs",
+      "detail": "2026-01-04",
+      "score": 8
+    },
+    {
+      "id": "busiest_day_flights",
+      "label": "Busiest day",
+      "value": "3 flights",
+      "detail": "2025-07-31",
+      "score": 5
+    },
+    {
+      "id": "most_frequent_route",
+      "label": "Most frequent route",
+      "value": "9 legs",
+      "detail": "KJFK → KSLC",
+      "score": 9
+    },
+    {
+      "id": "unique_airports",
+      "label": "Airports visited",
+      "value": "31 airports",
+      "detail": "Most common: KSLC (146 times)",
+      "score": 10
+    },
+    {
+      "id": "most_northern",
+      "label": "Farthest north",
+      "value": "61.17°N",
+      "detail": "KANC",
+      "score": 6
+    },
+    {
+      "id": "most_southern",
+      "label": "Farthest south",
+      "value": "26.07°N",
+      "detail": "KFLL",
+      "score": 6
+    },
+    {
+      "id": "longest_streak",
+      "label": "Longest streak",
+      "value": "22 days",
+      "detail": "2025-12-01 → 2025-12-22",
+      "score": 7
+    },
+    {
+      "id": "avg_flight_duration",
+      "label": "Average flight",
+      "value": "3.0 hrs",
+      "detail": "Across 240 flights",
+      "score": 5
+    }
+  ]
+}
