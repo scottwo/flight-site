@@ -330,9 +330,9 @@ export async function PilotProfilePage({
               <h2 className="text-2xl font-semibold text-[#0b1f33]">Current Training Status</h2>
             </div>
             <ul className="space-y-3 text-sm text-[#35506c]">
-              <li>Main Aircraft: Diamond DA 40</li>
+              <li>Fleet focus: A320/B737 family (Delta mainline)</li>
+              <li>Line-qualified on domestic trunk routes; ETOPS familiarization complete</li>
               <li>First Class Medical | Passport ready | FCC Radiotelephone License</li>
-              <li>Future CFI / CFII / MEI</li>
             </ul>
           </div>
 
@@ -344,7 +344,10 @@ export async function PilotProfilePage({
               </p>
             </div>
             <ul className="space-y-3 text-sm text-[#35506c]">
-              <li></li>
+              <li>Hub-and-spoke ops across SLC, MSP, ATL, JFK/LGA, SEA, DEN</li>
+              <li>Mountain ops into SLC/BOI/COS; winter operations and de-ice coordination</li>
+              <li>Busy airspace: JFK/LGA/EWR/BOS/DC metros; RNAV/RNP and ILS proficiency</li>
+              <li>High-altitude departures/arrivals; standard push/turn times at busy hubs</li>
             </ul>
           </div>
         </section>
@@ -360,14 +363,22 @@ export async function PilotProfilePage({
             <div className="space-y-4">
               {[
                 {
-                  title: "Technical Operations Manager",
-                  org: "Viewport (defunct)",
-                  detail: "Daily operational management of 90MM emails, junior data analyst mentorship, and SOP creation and refinement.",
+                  title: "First Officer",
+                  org: "Delta Air Lines (A320/B737)",
+                  detail:
+                    "Line flying across domestic network; partnered with captains and crew on SOP refinement and winter ops readiness.",
                 },
                 {
-                  title: "Ramp Agent",
-                  org: "Somewhere",
-                  detail: "hopefully soon",
+                  title: "First Officer",
+                  org: "Regional partner (CRJ/ERJ)",
+                  detail:
+                    "High-frequency flying into mountain and coastal airports; led brief/debrief habits that carried to mainline.",
+                },
+                {
+                  title: "Dispatcher / Ops support",
+                  org: "Charter operator",
+                  detail:
+                    "Coordinated slots, fuel, and MEL/CDL considerations; supported crews with weather and alternate planning.",
                 },
               ].map((role) => (
                 <div
@@ -387,11 +398,10 @@ export async function PilotProfilePage({
           <div className="space-y-4 rounded-3xl border border-[#d4e0ec] bg-white p-6 shadow-sm">
             <h2 className="text-2xl font-semibold text-[#0b1f33]">Training Milestones</h2>
             <ul className="space-y-3 text-sm text-[#35506c]">
-              <li>Intro Flight: May 2025</li>
-              <li>Private Ground School: September 2025</li>
-              <li>Private EOC: Jan 2026</li>
-              <li>Instrument Ground School: Jan 2026</li>
-              <li>Medical: First Class</li>
+              <li>ATP/CTP complete; First Class Medical</li>
+              <li>A320/B737 differences training | RVSM/ETOPS familiarization</li>
+              <li>Recurrent sims: stalls/UAS, upset recovery, RTO, engine-out drift-down</li>
+              <li>Emergency equipment/CRM refreshers each cycle</li>
               <li>FCC Radiotelephone: Yes</li>
             </ul>
           </div>
