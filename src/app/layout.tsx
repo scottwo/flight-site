@@ -10,8 +10,8 @@ import {
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Flight Deck Profile",
-  description: "Pilot profiles, dashboards, and public pages.",
+  title: "MyPilotPage",
+  description: "Create a shareable pilot profile with stats, maps, and currency—powered by your logbook.",
 };
 
 export default function RootLayout({
@@ -28,7 +28,7 @@ export default function RootLayout({
           <header className="sticky top-0 z-50 border-b border-[#d4e0ec] bg-white/85 backdrop-blur">
             <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
               <a href="/" className="text-lg font-semibold text-[#0f2f4b]">
-                Flight Deck Profile
+                MyPilotPage
               </a>
               <nav className="flex items-center gap-2 text-sm font-semibold text-[#0f2f4b]">
                 <a
@@ -42,6 +42,12 @@ export default function RootLayout({
                   className="rounded-full px-4 py-2 transition hover:bg-[#e6eef7] hover:text-[#1f4b71]"
                 >
                   Demo
+                </a>
+                <a
+                  href="/pricing"
+                  className="rounded-full px-4 py-2 transition hover:bg-[#e6eef7] hover:text-[#1f4b71]"
+                >
+                  Pricing
                 </a>
                 <SignedIn>
                   <a
@@ -76,6 +82,10 @@ export default function RootLayout({
             <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-6 py-6 text-sm text-[#35506c]">
               <a href="/" className="hover:text-[#1f4b71]">
                 Home
+              </a>
+              <span className="text-[#9cb6cf]">•</span>
+              <a href="/pricing" className="hover:text-[#1f4b71]">
+                Pricing
               </a>
               <span className="text-[#9cb6cf]">•</span>
               <a href="/privacy" className="hover:text-[#1f4b71]">
