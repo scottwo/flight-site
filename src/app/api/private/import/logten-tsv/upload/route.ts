@@ -13,19 +13,30 @@ export async function POST(request: Request) {
   // We enforce auth only when generating the token.
 
   const body = (await request.json()) as HandleUploadBody;
+  console.log("blob upload route hit", { url: request.url, type: (body as any)?.type });
 
-  // Vercel Blob needs an absolute callback URL for `onUploadCompleted`.
-  // Prefer an explicit env var; fall back to forwarded host headers.
-  const callbackBaseUrl =
-    process.env.VERCEL_BLOB_CALLBACK_URL ||
-    process.env.NEXT_PUBLIC_APP_URL ||
-    (() => {
-      const proto = request.headers.get("x-forwarded-proto") || "http";
-      const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
-      return host ? `${proto}://${host}` : new URL(request.url).origin;
-    })();
-
-  const callbackUrl = `${callbackBaseUrl}/api/private/import/logten-tsv/upload`;
+  // Resolve callback base URL
+  let callbackBaseUrl = process.env.VERCEL_BLOB_CALLBACK_URL;
+  if (!callbackBaseUrl && process.env.VERCEL === "1") {
+    const host =
+      process.env.VERCEL_BRANCH_URL ||
+      process.env.VERCEL_URL ||
+      process.env.VERCEL_PROJECT_PRODUCTION_URL;
+    if (host) {
+      callbackBaseUrl = host.startsWith("http") ? host : `https://${host}`;
+    }
+  }
+  if (!callbackBaseUrl) {
+    const proto = request.headers.get("x-forwarded-proto") || "https";
+    const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
+    if (host) {
+      callbackBaseUrl = `${proto}://${host}`;
+    }
+  }
+  if (!callbackBaseUrl) {
+    return NextResponse.json({ error: "Unable to resolve callback URL" }, { status: 500 });
+  }
+  const callbackUrl = new URL("/api/private/import/logten-tsv/upload", callbackBaseUrl).toString();
 
   try {
     const jsonResponse = await handleUpload({
@@ -85,7 +96,7 @@ export async function POST(request: Request) {
 
       onUploadCompleted: async ({ blob, tokenPayload }) => {
         // Do NOT require Clerk auth here; rely on the signed tokenPayload.
-        console.log("Upload complete")
+        console.log("onUploadCompleted fired", { blobUrl: blob.url, pathname: blob.pathname });
         let parsed: { jobId?: string } = {};
         try {
           parsed = tokenPayload ? JSON.parse(String(tokenPayload)) : {};
@@ -110,7 +121,8 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json(jsonResponse);
+    console.log("handleUpload result", jsonResponse);
+    return jsonResponse instanceof Response ? jsonResponse : NextResponse.json(jsonResponse);
   } catch (error) {
     return NextResponse.json({ error: (error as Error).message }, { status: 400 });
   }
