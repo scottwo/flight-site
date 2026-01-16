@@ -362,19 +362,19 @@ export async function PilotProfilePage({
             </div>
             <div className="space-y-4">
               {[
-                {
-                  title: "First Officer",
-                  org: "Delta Air Lines (A320/B737)",
-                  detail:
-                    "Line flying across domestic network; partnered with captains and crew on SOP refinement and winter ops readiness.",
-                },
-                {
-                  title: "First Officer",
-                  org: "Regional partner (CRJ/ERJ)",
-                  detail:
-                    "High-frequency flying into mountain and coastal airports; led brief/debrief habits that carried to mainline.",
-                },
-                {
+              {
+                title: "First Officer",
+                org: "Delta Air Lines (A320/B737)",
+                detail:
+                  "Line flying across domestic network; partnered with captains and crew on SOP refinement and winter ops readiness.",
+              },
+              {
+                title: "First Officer",
+                org: "Regional partner (CRJ/ERJ)",
+                detail:
+                  "High-frequency flying into mountain and coastal airports; led brief/debrief habits that carried to mainline.",
+              },
+              {
                   title: "Dispatcher / Ops support",
                   org: "Charter operator",
                   detail:
@@ -382,7 +382,7 @@ export async function PilotProfilePage({
                 },
               ].map((role) => (
                 <div
-                  key={role.title}
+                  key={`${role.title}-${role.org}`}
                   className="rounded-2xl border border-[#d4e0ec] bg-[#f3f7fc] p-4"
                 >
                   <p className="text-sm font-semibold text-[#0b1f33]">

@@ -3,29 +3,44 @@
 @import "ol/ol.css";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+  --bg: #eaf1f8;
+  --panel: #ffffff;
+  --panel-muted: #e6eef7;
+  --text: #0b1f33;
+  --text-strong: #0f2f4b;
+  --muted: #35506c;
+  --muted-2: #4b647c;
+  --border: #d4e0ec;
+  --accent: #1f4b71;
+}
+
+[data-theme="dark"],
+.dark {
+  color-scheme: dark;
+  --bg: #0b1626;
+  --panel: #0f1b2e;
+  --panel-muted: #162338;
+  --text: #dbe7ff;
+  --text-strong: #e8f0ff;
+  --muted: #a8bedd;
+  --muted-2: #97b0d4;
+  --border: #1c2d44;
+  --accent: #3a7bd5;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
   --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono",
     "Courier New", monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg);
+  color: var(--text);
   font-family: var(--font-sans);
 }
 
@@ -33,3 +48,28 @@ body {
 .ol-viewport canvas {
   max-width: none !important;
 }
+
+/* helper utility-like classes for custom palette */
+.bg-surface { background-color: var(--panel); }
+.bg-surface-muted { background-color: var(--panel-muted); }
+.text-body { color: var(--text); }
+.text-muted { color: var(--muted); }
+.text-muted-2 { color: var(--muted-2); }
+.border-surface { border-color: var(--border); }
+.btn-primary { background-color: var(--accent); color: #ffffff; }
+
+/* Map legacy utility colors to theme variables for consistency */
+.bg-\[\#eaf1f8\] { background-color: var(--bg) !important; }
+.bg-white { background-color: var(--panel) !important; }
+.bg-\[\#f3f7fc\] { background-color: var(--panel-muted) !important; }
+.bg-\[\#e6eef7\] { background-color: var(--panel-muted) !important; }
+.bg-\[\#d4e0ec\] { background-color: var(--border) !important; }
+.bg-\[\#1f4b71\] { background-color: var(--accent) !important; }
+.text-\[\#0b1f33\] { color: var(--text) !important; }
+.text-\[\#0f2f4b\] { color: var(--text-strong) !important; }
+.text-\[\#35506c\] { color: var(--muted) !important; }
+.text-\[\#4b647c\] { color: var(--muted-2) !important; }
+.text-\[\#5d7995\] { color: var(--muted-2) !important; }
+.text-\[\#9cb6cf\] { color: var(--muted-2) !important; }
+.border-\[\#d4e0ec\] { border-color: var(--border) !important; }
+.border-\[\#9cb6cf\] { border-color: var(--muted-2) !important; }

@@ -8,6 +8,7 @@ import {
   UserButton,
 } from "@clerk/nextjs";
 import "./globals.css";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export const metadata: Metadata = {
   title: "MyPilotPage",
@@ -22,51 +23,55 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
-        <body
-          className="antialiased bg-[#eaf1f8] text-[#0b1f33]"
-        >
-          <header className="sticky top-0 z-50 border-b border-[#d4e0ec] bg-white/85 backdrop-blur">
+        <body className="antialiased bg-[var(--bg)] text-[var(--text)]">
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `(function(){try{const t=localStorage.getItem("mypilotpage-theme");const sysDark=typeof window!=="undefined"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;const th=t==="dark"||t==="light"?t:(sysDark?"dark":"light");document.documentElement.classList.toggle("dark",th==="dark");document.documentElement.setAttribute("data-theme",th);}catch(e){}})();`,
+            }}
+          />
+          <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[color-mix(in srgb,var(--panel) 85%,transparent)] backdrop-blur">
             <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-              <a href="/" className="text-lg font-semibold text-[#0f2f4b]">
+              <a href="/" className="text-lg font-semibold text-[var(--text)]">
                 MyPilotPage
               </a>
-              <nav className="flex items-center gap-2 text-sm font-semibold text-[#0f2f4b]">
+              <nav className="flex items-center gap-2 text-sm font-semibold text-[var(--text)]">
                 <a
                   href="/"
-                  className="rounded-full px-4 py-2 transition hover:bg-[#e6eef7] hover:text-[#1f4b71]"
+                  className="rounded-full px-4 py-2 transition hover:bg-[var(--panel-muted)] hover:text-[var(--text-strong)]"
                 >
                   Home
                 </a>
                 <a
                   href="/p/demo"
-                  className="rounded-full px-4 py-2 transition hover:bg-[#e6eef7] hover:text-[#1f4b71]"
+                  className="rounded-full px-4 py-2 transition hover:bg-[var(--panel-muted)] hover:text-[var(--text-strong)]"
                 >
                   Demo
                 </a>
                 <a
                   href="/pricing"
-                  className="rounded-full px-4 py-2 transition hover:bg-[#e6eef7] hover:text-[#1f4b71]"
+                  className="rounded-full px-4 py-2 transition hover:bg-[var(--panel-muted)] hover:text-[var(--text-strong)]"
                 >
                   Pricing
                 </a>
                 <SignedIn>
                   <a
                     href="/dashboard"
-                    className="rounded-full px-4 py-2 transition hover:bg-[#e6eef7] hover:text-[#1f4b71]"
+                    className="rounded-full px-4 py-2 transition hover:bg-[var(--panel-muted)] hover:text-[var(--text-strong)]"
                   >
                     Dashboard
                   </a>
                 </SignedIn>
               </nav>
               <div className="flex items-center gap-3">
+                <ThemeToggle />
                 <SignedOut>
                   <SignInButton mode="modal">
-                    <button className="rounded-full border border-[#d4e0ec] px-4 py-2 text-sm font-semibold text-[#0f2f4b] transition hover:bg-[#e6eef7] hover:text-[#1f4b71]">
+                    <button className="rounded-full border border-[var(--border)] bg-[var(--panel)] px-4 py-2 text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--panel-muted)] hover:text-[var(--text-strong)]">
                       Sign in
                     </button>
                   </SignInButton>
                   <SignUpButton mode="modal">
-                    <button className="rounded-full bg-[#1f4b71] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#163552]">
+                    <button className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-90">
                       Sign up
                     </button>
                   </SignUpButton>
@@ -78,21 +83,21 @@ export default function RootLayout({
             </div>
           </header>
           {children}
-          <footer className="mt-12 border-t border-[#d4e0ec] bg-white/80">
-            <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-6 py-6 text-sm text-[#35506c]">
-              <a href="/" className="hover:text-[#1f4b71]">
+          <footer className="mt-12 border-t border-[var(--border)] bg-[color-mix(in srgb,var(--panel) 85%,transparent)]">
+            <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-6 py-6 text-sm text-[var(--muted)]">
+              <a href="/" className="hover:text-[var(--text-strong)]">
                 Home
               </a>
-              <span className="text-[#9cb6cf]">•</span>
-              <a href="/pricing" className="hover:text-[#1f4b71]">
+              <span className="text-[var(--muted-2)]">•</span>
+              <a href="/pricing" className="hover:text-[var(--text-strong)]">
                 Pricing
               </a>
-              <span className="text-[#9cb6cf]">•</span>
-              <a href="/privacy" className="hover:text-[#1f4b71]">
+              <span className="text-[var(--muted-2)]">•</span>
+              <a href="/privacy" className="hover:text-[var(--text-strong)]">
                 Privacy
               </a>
-              <span className="text-[#9cb6cf]">•</span>
-              <a href="/terms" className="hover:text-[#1f4b71]">
+              <span className="text-[var(--muted-2)]">•</span>
+              <a href="/terms" className="hover:text-[var(--text-strong)]">
                 Terms
               </a>
             </div>

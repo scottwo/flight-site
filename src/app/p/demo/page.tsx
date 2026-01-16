@@ -394,8 +394,8 @@ export default async function DemoProfilePage() {
   const { stats, heatmap, routes } = aggregate(filteredFlights);
 
   return (
-    <>
-      <div className="bg-[#dce8f7] text-[#0f2f4b]">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+      <div className="bg-[var(--panel-muted)] text-[var(--text)]">
         <div className="mx-auto max-w-6xl px-6 py-3 text-sm font-semibold">
           Demo profile (fictional data) — Delta pilot based in Salt Lake City — showing last 6 calendar months
         </div>
@@ -406,6 +406,6 @@ export default async function DemoProfilePage() {
         heatmapOverride={heatmap}
         routesOverride={routes}
       />
-    </>
+    </div>
   );
 }
