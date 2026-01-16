@@ -85,6 +85,7 @@ export async function POST(request: Request) {
 
       onUploadCompleted: async ({ blob, tokenPayload }) => {
         // Do NOT require Clerk auth here; rely on the signed tokenPayload.
+        console.log("Upload complete")
         let parsed: { jobId?: string } = {};
         try {
           parsed = tokenPayload ? JSON.parse(String(tokenPayload)) : {};
@@ -93,6 +94,7 @@ export async function POST(request: Request) {
         }
 
         const jobId = parsed.jobId;
+        console.log("JobID: " + jobId)
         if (!jobId) return;
 
         await prisma.importJob.update({
