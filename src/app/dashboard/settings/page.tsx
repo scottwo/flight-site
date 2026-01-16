@@ -3,6 +3,7 @@ export const runtime = "nodejs";
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import LogTenTsvUploadCard from "@/components/LogTenTsvUploadCard";
 
 export default async function SettingsPage() {
   const { userId } = await auth();
@@ -13,6 +14,7 @@ export default async function SettingsPage() {
   return (
     <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <div className="mx-auto flex max-w-4xl flex-col gap-8 px-6 py-12">
+        <LogTenTsvUploadCard />
         <header className="space-y-2">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--muted-2)]">Settings</p>
           <h1 className="text-3xl font-semibold text-[var(--text)]">Profile settings</h1>

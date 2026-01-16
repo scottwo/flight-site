@@ -17,15 +17,17 @@
   "dependencies": {
     "@clerk/nextjs": "^6.36.5",
     "@fontsource/inter": "^5.2.8",
-    "@prisma/adapter-pg": "^7.2.0",
-    "@prisma/client": "^7.2.0",
+    "@prisma/adapter-pg": "7.2.0",
+    "@prisma/client": "7.2.0",
     "@types/pg": "^8.16.0",
+    "@vercel/blob": "^2.0.0",
     "arc": "^0.2.0",
     "next": "16.1.1",
     "ol": "^10.7.0",
     "pg": "^8.16.3",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "vercel": "^50.4.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -35,7 +37,7 @@
     "better-sqlite3": "^12.5.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
-    "prisma": "^7.2.0",
+    "prisma": "7.2.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

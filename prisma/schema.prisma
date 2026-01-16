@@ -12,6 +12,18 @@ datasource db {
   provider  = "postgresql"
 }
 
+enum ImportProvider {
+  LOGTEN_TSV
+}
+
+enum ImportStatus {
+  UPLOADING
+  UPLOADED
+  IMPORTING
+  SUCCEEDED
+  FAILED
+}
+
 model User {
   id          String   @id @default(uuid())
   clerkUserId String   @unique
@@ -20,6 +32,7 @@ model User {
   updatedAt   DateTime @updatedAt
 
   profile     Profile?
+  importJobs  ImportJob[]
 }
 
 model Profile {
@@ -29,4 +42,25 @@ model Profile {
   displayName String
   headline    String?
   updatedAt   DateTime @updatedAt
+}
+
+model ImportJob {
+  id               String        @id @default(cuid())
+  userId           String
+  provider         ImportProvider
+  status           ImportStatus  @default(UPLOADING)
+
+  originalFilename String?
+  blobUrl          String?
+  blobPathname     String?
+  bytes            Int?
+
+  error            String?
+
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }
