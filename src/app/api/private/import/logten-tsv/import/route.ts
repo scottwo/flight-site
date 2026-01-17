@@ -1,14 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
 import { del } from "@vercel/blob";
 import { Prisma } from "@prisma/client";
-import { parse } from "csv-parse/sync";
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
-
-type Row = Record<string, string>;
 
 const parseFloatSafe = (value?: string | null) => {
   if (!value) return null;
@@ -74,26 +71,73 @@ export async function POST(req: Request) {
     if (!tsvRes.ok) throw new Error(`Blob fetch failed: ${tsvRes.status}`);
     const text = await tsvRes.text();
 
-    const records = parse(text, {
-      columns: true,
-      delimiter: "\t",
-      relax_quotes: true,
-      relax_column_count: true,
-      bom: true,
-      skip_empty_lines: true,
-      record_delimiter: "auto",
-      trim: true,
-    }) as Row[];
+    // LogTen TSV exports are not strict TSV rows: they can include interleaved metadata rows and
+    // multi-line remarks. MVP approach: parse line-by-line and only keep rows that begin with a
+    // flight date (YYYY-MM-DD). Then extract columns by header index.
+    const lines = text.replace(/\r\n/g, "\n").split("\n");
+    const headerLine = lines.find((l) => l.trim().length > 0);
+    if (!headerLine) throw new Error("Empty TSV");
+
+    const headers = headerLine.split("\t").map((h) => h.trim());
+    const colIndex = new Map<string, number>();
+    headers.forEach((h, i) => colIndex.set(h, i));
+
+    const idx = (name: string) => colIndex.get(name) ?? -1;
+
+    const iFlightDate = idx("flight_flightDate");
+    const iFrom = idx("flight_from");
+    const iTo = idx("flight_to");
+
+    if (iFlightDate < 0 || iFrom < 0 || iTo < 0) {
+      throw new Error(
+        `Missing required columns: flight_flightDate=${iFlightDate}, flight_from=${iFrom}, flight_to=${iTo}`
+      );
+    }
+
+    const flightLines: string[] = [];
+    const dateRowRe = /^\s*\d{4}-\d{2}-\d{2}(\t|$)/;
+    let sawHeader = false;
+
+    for (const line of lines) {
+      if (!sawHeader) {
+        if (line === headerLine) sawHeader = true;
+        continue;
+      }
+      if (!line || !line.trim()) continue;
+      if (!dateRowRe.test(line)) continue;
+      flightLines.push(line);
+    }
+
+    console.log("logten import parsed flight lines", {
+      totalLines: lines.length,
+      flightLineCount: flightLines.length,
+      firstSample: flightLines.slice(0, 3).map((l) => l.slice(0, 80)),
+    });
 
     const icaos = new Set<string>();
 
-    const flightsToCreate: Prisma.FlightCreateManyInput[] = records
-      .map((row): Prisma.FlightCreateManyInput | null => {
-        const flightDate = parseDate(row["flight_flightDate"]);
-        const fromIcao = (row["flight_from"] ?? "").trim().toUpperCase();
-        const toIcao = (row["flight_to"] ?? "").trim().toUpperCase();
+    const get = (fields: string[], name: string) => {
+      const i = idx(name);
+      return i >= 0 ? (fields[i] ?? "") : "";
+    };
+
+    const flightsToCreate: Prisma.FlightCreateManyInput[] = flightLines
+      .map((line): Prisma.FlightCreateManyInput | null => {
+        const fields = line.split("\t");
+
+        const flightDate = parseDate(get(fields, "flight_flightDate"));
+        const fromIcaoRaw = get(fields, "flight_from").trim();
+        const toIcaoRaw = get(fields, "flight_to").trim();
+        const fromIcao = fromIcaoRaw.toUpperCase();
+        const toIcao = toIcaoRaw.toUpperCase();
 
         if (!flightDate || !fromIcao || !toIcao) {
+          console.log("skipping row", {
+            flight_flightDate: get(fields, "flight_flightDate"),
+            flight_from: get(fields, "flight_from"),
+            flight_to: get(fields, "flight_to"),
+            raw: line.slice(0, 200),
+          });
           return null;
         }
 
@@ -103,20 +147,20 @@ export async function POST(req: Request) {
         return {
           userId: internalUser.id,
           flightDate,
-          totalTime: parseFloatSafe(row["flight_totalTime"]),
-          pic: parseFloatSafe(row["flight_pic"]),
-          sic: parseFloatSafe(row["flight_sic"]),
-          night: parseFloatSafe(row["flight_night"]),
-          crossCountry: parseFloatSafe(row["flight_crossCountry"]),
-          ifr: parseFloatSafe(row["flight_ifr"]),
-          dayLandings: parseIntSafe(row["flight_dayLandings"]) ?? 0,
-          nightLandings: parseIntSafe(row["flight_nightLandings"]) ?? 0,
-          route: row["flight_route"] || null,
-          remarks: row["flight_remarks"] || null,
-          aircraftMake: row["aircraftType_make"] || null,
-          aircraftModel: row["aircraftType_model"] || null,
-          aircraftType: row["aircraftType_type"] || null,
-          tailNumber: row["aircraft_secondaryID"] || null,
+          totalTime: parseFloatSafe(get(fields, "flight_totalTime")),
+          pic: parseFloatSafe(get(fields, "flight_pic")),
+          sic: parseFloatSafe(get(fields, "flight_sic")),
+          night: parseFloatSafe(get(fields, "flight_night")),
+          crossCountry: parseFloatSafe(get(fields, "flight_crossCountry")),
+          ifr: parseFloatSafe(get(fields, "flight_ifr")),
+          dayLandings: parseIntSafe(get(fields, "flight_dayLandings")) ?? 0,
+          nightLandings: parseIntSafe(get(fields, "flight_nightLandings")) ?? 0,
+          route: get(fields, "flight_route") || null,
+          remarks: get(fields, "flight_remarks") || null,
+          aircraftMake: get(fields, "aircraftType_make") || null,
+          aircraftModel: get(fields, "aircraftType_model") || null,
+          aircraftType: get(fields, "aircraftType_type") || null,
+          tailNumber: get(fields, "aircraft_secondaryID") || null,
           fromIcao,
           toIcao,
         };
