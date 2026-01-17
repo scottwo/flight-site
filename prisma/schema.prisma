@@ -33,6 +33,8 @@ model User {
 
   profile     Profile?
   importJobs  ImportJob[]
+  flights     Flight[]
+  stats       ProfileStats?
 }
 
 model Profile {
@@ -54,6 +56,7 @@ model ImportJob {
   blobUrl          String?
   blobPathname     String?
   bytes            Int?
+  importedCount    Int?
 
   error            String?
 
@@ -63,4 +66,72 @@ model ImportJob {
   user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+}
+
+model Airport {
+  id        String   @id @default(cuid())
+  icao      String   @unique @db.Citext
+  name      String?
+  lat       Float?
+  lon       Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  departures Flight[] @relation("depAirport")
+  arrivals   Flight[] @relation("arrAirport")
+}
+
+model Flight {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  flightDate    DateTime
+  fromIcao      String   @db.Citext
+  toIcao        String   @db.Citext
+  fromAirportId String?
+  toAirportId   String?
+  fromAirport   Airport? @relation("depAirport", fields: [fromAirportId], references: [id])
+  toAirport     Airport? @relation("arrAirport", fields: [toAirportId], references: [id])
+
+  totalTime     Float?
+  pic           Float?
+  sic           Float?
+  night         Float?
+  crossCountry  Float?
+  ifr           Float?
+  dayLandings   Int?
+  nightLandings Int?
+
+  route         String?
+  remarks       String?
+
+  aircraftMake  String?
+  aircraftModel String?
+  aircraftType  String?
+  tailNumber    String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId, flightDate])
+}
+
+model ProfileStats {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  totalTime     Float @default(0)
+  pic           Float @default(0)
+  sic           Float @default(0)
+  night         Float @default(0)
+  crossCountry  Float @default(0)
+  ifr           Float @default(0)
+
+  last90_total    Float @default(0)
+  last90_landings Int   @default(0)
+  last90_ifr      Float @default(0)
+
+  updatedAt     DateTime @updatedAt
 }

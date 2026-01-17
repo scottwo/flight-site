@@ -11,6 +11,7 @@ type Job = {
   blobPathname: string | null;
   bytes: number | null;
   error: string | null;
+  importedCount?: number | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -21,6 +22,7 @@ export default function LogTenTsvUploadCard() {
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
 
   useEffect(() => {
     const fetchLatest = async () => {
@@ -31,7 +33,16 @@ export default function LogTenTsvUploadCard() {
       }
     };
     fetchLatest().catch(() => {});
-  }, []);
+    let interval: NodeJS.Timeout;
+    const startPolling = (ms: number) => {
+      clearInterval(interval);
+      interval = setInterval(fetchLatest, ms);
+    };
+    const fastStatuses = new Set(["UPLOADING", "IMPORTING"]);
+    startPolling(fastStatuses.has(job?.status || "") ? 2000 : 20000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [job?.status]);
 
   const handleFile = async (file: File) => {
     setMessage(null);
@@ -62,12 +73,52 @@ export default function LogTenTsvUploadCard() {
       } else {
         setMessage("Uploaded, but could not refresh job status.");
       }
-      console.log("Uploaded blob:", res);
+      // Force a fresh poll after upload
+      setTimeout(() => {
+        fetch("/api/private/import/logten-tsv/latest")
+          .then((res) => res.json())
+          .then((data) => setJob(data.job))
+          .catch(() => {});
+      }, 500);
     } catch (err) {
       console.error(err);
       setMessage("Upload failed. Please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const triggerImport = async () => {
+    setImporting(true);
+    setMessage(null);
+    try {
+      if (!job?.id) {
+        setMessage("No upload ready to import.");
+        return;
+      }
+
+      const res = await fetch("/api/private/import/logten-tsv/import", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ jobId: job.id }),
+      });
+      if (res.ok) {
+        setMessage("Import started.");
+        setTimeout(() => {
+          fetch("/api/private/import/logten-tsv/latest")
+            .then((r) => r.json())
+            .then((data) => setJob(data.job))
+            .catch(() => {});
+        }, 300);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setMessage(data.error || "Import failed to start.");
+      }
+    } catch (err) {
+      console.error(err);
+      setMessage("Import failed to start.");
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -109,7 +160,24 @@ export default function LogTenTsvUploadCard() {
               </a>
             )}
             {job.error && <p className="text-red-500">Error: {job.error}</p>}
+            {job.status === "SUCCEEDED" && job.importedCount != null && (
+              <p className="font-semibold text-[var(--text)]">
+                Flights imported: {job.importedCount}
+              </p>
+            )}
           </div>
+          {job.status === "UPLOADED" && (
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                onClick={triggerImport}
+                disabled={importing || !job?.id}
+                className="rounded-full bg-[var(--accent)] px-4 py-2 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
+              >
+                {importing ? "Starting..." : "Import now"}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

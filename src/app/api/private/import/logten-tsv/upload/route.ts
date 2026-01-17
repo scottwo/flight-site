@@ -13,7 +13,6 @@ export async function POST(request: Request) {
   // We enforce auth only when generating the token.
 
   const body = (await request.json()) as HandleUploadBody;
-  console.log("blob upload route hit", { url: request.url, type: (body as any)?.type });
 
   // Resolve callback base URL
   let callbackBaseUrl = process.env.VERCEL_BLOB_CALLBACK_URL;
@@ -96,7 +95,6 @@ export async function POST(request: Request) {
 
       onUploadCompleted: async ({ blob, tokenPayload }) => {
         // Do NOT require Clerk auth here; rely on the signed tokenPayload.
-        console.log("onUploadCompleted fired", { blobUrl: blob.url, pathname: blob.pathname });
         let parsed: { jobId?: string } = {};
         try {
           parsed = tokenPayload ? JSON.parse(String(tokenPayload)) : {};
@@ -105,7 +103,6 @@ export async function POST(request: Request) {
         }
 
         const jobId = parsed.jobId;
-        console.log("JobID: " + jobId)
         if (!jobId) return;
 
         await prisma.importJob.update({
@@ -121,7 +118,6 @@ export async function POST(request: Request) {
       },
     });
 
-    console.log("handleUpload result", jsonResponse);
     return jsonResponse instanceof Response ? jsonResponse : NextResponse.json(jsonResponse);
   } catch (error) {
     return NextResponse.json({ error: (error as Error).message }, { status: 400 });
