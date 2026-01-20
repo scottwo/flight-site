@@ -1,5 +1,6 @@
 import FlightsMap from "@/components/FlightsMap";
 import FunFacts from "@/components/FunFacts";
+import { CumulativeHoursChart } from "@/components/CumulativeHoursChart";
 import { formatCount, formatHours, getHeatmap, getStats } from "@/lib/stats";
 import { getRoutes } from "@/lib/routes";
 
@@ -19,11 +20,13 @@ export async function PilotProfilePage({
   statsOverride,
   heatmapOverride,
   routesOverride,
+  cumulativeOverride,
 }: {
   dataDir?: string;
   statsOverride?: StatsType;
   heatmapOverride?: HeatmapType;
   routesOverride?: RoutesType;
+  cumulativeOverride?: { data: { date: string; total: number; cumulative: number }[]; totalHours: number };
 } = {}) {
   const [stats, heatmap, routes] = await Promise.all([
     statsOverride ?? getStats(dataDir),
@@ -211,6 +214,11 @@ export async function PilotProfilePage({
                     })}
                   </div>
                 </div>
+                {cumulativeOverride ? (
+                  <div className="rounded-2xl border border-[#d4e0ec] bg-white p-5 shadow-sm">
+                    <CumulativeHoursChart data={cumulativeOverride.data} totalHours={cumulativeOverride.totalHours} />
+                  </div>
+                ) : null}
               </section>
             )}
 

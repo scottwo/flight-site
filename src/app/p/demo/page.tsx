@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { PilotProfilePage } from "@/app/pilot/page";
+import { CumulativeHoursChart } from "@/components/CumulativeHoursChart";
 import type { RouteLeg } from "@/lib/routes";
 
 type Flight = {
@@ -392,6 +393,22 @@ export default async function DemoProfilePage() {
   });
 
   const { stats, heatmap, routes } = aggregate(filteredFlights);
+  const dailyTotals = Array.from(
+    filteredFlights.reduce((map, f) => {
+      const key = f.flt_date;
+      const prev = map.get(key) ?? 0;
+      map.set(key, prev + (Number(f.total_time) || 0));
+      return map;
+    }, new Map<string, number>()),
+  ).sort(([a], [b]) => a.localeCompare(b));
+  const cumulativeChartData = (() => {
+    let running = 0;
+    return dailyTotals.map(([date, total]) => {
+      const totalNum = Number(total) || 0;
+      running += totalNum;
+      return { date, total: totalNum, cumulative: running };
+    });
+  })();
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
@@ -405,6 +422,7 @@ export default async function DemoProfilePage() {
         statsOverride={stats}
         heatmapOverride={heatmap}
         routesOverride={routes}
+        cumulativeOverride={{ data: cumulativeChartData, totalHours: stats.totals.total }}
       />
     </div>
   );

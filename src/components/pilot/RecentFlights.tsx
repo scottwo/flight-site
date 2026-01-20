@@ -34,9 +34,9 @@ export function RecentFlights({ flights }: Props) {
         </span>
       </div>
       <div className="space-y-2">
-        {flights.map((flight) => (
+        {flights.map((flight, idx) => (
           <div
-            key={`${flight.flightDate.toISOString()}-${flight.fromIcao}-${flight.toIcao}`}
+            key={`${flight.flightDate.toISOString()}-${flight.fromIcao}-${flight.toIcao}-${idx}`}
             className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[var(--border)] bg-[var(--panel-muted)] px-4 py-3"
           >
             <div className="flex flex-col">

@@ -4,9 +4,8 @@ import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-function formatDate(d: Date): string {
-  return d.toISOString().slice(0, 10);
-}
+import { CumulativeHoursChart } from "@/components/CumulativeHoursChart";
+import { CurrencyCards } from "@/components/pilot/CurrencyCards";
 import { FunFacts, type FunFact } from "@/components/pilot/FunFacts";
 import { Heatmap } from "@/components/pilot/Heatmap";
 import { RecentFlights } from "@/components/pilot/RecentFlights";
@@ -137,7 +136,8 @@ export default async function PublicProfilePage({ params }: PageProps) {
   }
 
   const now = new Date();
-  const startDayAgg = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 11, 1));
+  const startDayAgg = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 23, 1));
+  const heatmapWindowStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 11, 1));
   const currency90Start = new Date(now);
   currency90Start.setUTCDate(currency90Start.getUTCDate() - 90);
   const currency180Start = new Date(now);
@@ -176,21 +176,30 @@ export default async function PublicProfilePage({ params }: PageProps) {
     prisma.flight.findMany({
       where: { userId: profile.user.id },
       orderBy: { flightDate: "desc" },
-      take: 5,
+      take: 15,
       select: { flightDate: true, fromIcao: true, toIcao: true, totalTime: true, night: true, ifr: true },
     }),
   ]);
 
-  const currencyFlightsWithin90 = currencyFlights.filter((f) => f.flightDate >= currency90Start);
-  const dayLandingCount = currencyFlightsWithin90.reduce((sum, f) => sum + (f.dayLandings ?? 0), 0);
-  const nightLandingCount = currencyFlightsWithin90.reduce((sum, f) => sum + (f.nightLandings ?? 0), 0);
-  const ifr6 = currencyFlights.reduce((sum, f) => sum + (f.ifr ?? 0), 0);
+  const heatmapData = dayAgg
+    .filter((d) => d.day >= heatmapWindowStart)
+    .map((d) => ({
+      day: d.day.toISOString().slice(0, 10),
+      totalTime: d.totalTime,
+      flightsCount: d.flightsCount,
+    }));
 
-  const heatmapData = dayAgg.map((d) => ({
-    day: d.day.toISOString().slice(0, 10),
-    totalTime: d.totalTime,
-    flightsCount: d.flightsCount,
-  }));
+  const cumulativeChartData: { date: string; total: number; cumulative: number }[] = [];
+  let running = 0;
+  for (const entry of dayAgg) {
+    const total = entry.totalTime ?? 0;
+    running += total;
+    cumulativeChartData.push({
+      date: entry.day.toISOString().slice(0, 10),
+      total,
+      cumulative: running,
+    });
+  }
 
   const parsedFunFacts = stats?.funFacts ? parseFunFacts(stats.funFacts) : [];
   const fallbackFacts = parsedFunFacts.length
@@ -229,72 +238,9 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
         <StatsCards stats={stats} />
 
-        <div className="rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
-          <div className="mb-4 flex items-baseline justify-between gap-4">
-            <div>
-              <h2 className="text-lg font-semibold text-[var(--text)]">Currency</h2>
-              <p className="text-sm text-[var(--muted)]">
-                Based on the last 90 days (landings) and last 6 months (IFR proxy).
-              </p>
-            </div>
-            <p className="text-xs text-[var(--muted-2)]">
-              Landings window: {formatDate(currency90Start)} → {formatDate(now)}
-            </p>
-          </div>
+        <CumulativeHoursChart data={cumulativeChartData} totalHours={stats?.totalTime ?? 0} />
 
-          <div className="grid gap-3 md:grid-cols-3">
-            <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel-muted)] p-4">
-              <div className="flex items-center justify-between gap-3">
-                <p className="font-semibold text-[var(--text)]">Day landings</p>
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                    dayLandingCount >= 3
-                      ? "bg-emerald-500/15 text-emerald-300"
-                      : "bg-rose-500/15 text-rose-300"
-                  }`}
-                >
-                  {dayLandingCount >= 3 ? "CURRENT" : "NOT CURRENT"}
-                </span>
-              </div>
-              <p className="mt-2 text-sm text-[var(--muted)]">{dayLandingCount} in last 90 days</p>
-            </div>
-
-            <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel-muted)] p-4">
-              <div className="flex items-center justify-between gap-3">
-                <p className="font-semibold text-[var(--text)]">Night landings</p>
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                    nightLandingCount >= 3
-                      ? "bg-emerald-500/15 text-emerald-300"
-                      : "bg-rose-500/15 text-rose-300"
-                  }`}
-                >
-                  {nightLandingCount >= 3 ? "CURRENT" : "NOT CURRENT"}
-                </span>
-              </div>
-              <p className="mt-2 text-sm text-[var(--muted)]">{nightLandingCount} in last 90 days</p>
-            </div>
-
-            <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel-muted)] p-4">
-              <div className="flex items-center justify-between gap-3">
-                <p className="font-semibold text-[var(--text)]">IFR (proxy)</p>
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                    ifr6 > 0 ? "bg-emerald-500/15 text-emerald-300" : "bg-rose-500/15 text-rose-300"
-                  }`}
-                >
-                  {ifr6 > 0 ? "RECENT" : "NO RECENT"}
-                </span>
-              </div>
-              <p className="mt-2 text-sm text-[var(--muted)]">{ifr6.toFixed(1)} IFR hrs in last 6 months</p>
-            </div>
-          </div>
-
-          <p className="mt-4 text-xs text-[var(--muted-2)]">
-            Note: IFR currency here is a placeholder based on logged IFR time. We can replace this with true approach-count
-            logic once approaches are imported.
-          </p>
-        </div>
+        <CurrencyCards flights={currencyFlights} window90Start={currency90Start} window180Start={currency180Start} />
 
         <div className="rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
           <div className="flex items-baseline justify-between gap-4">
