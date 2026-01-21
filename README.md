@@ -37,4 +37,9 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ## Scott's Notes
 - Run npm run export:logten before deploy
-- DB path comes from LOGTEN_DB_PATH env var
+
+## Airport data seeding (OurAirports)
+- Download the latest `airports.csv` from https://ourairports.com/data/
+- Place it at `data/ourairports/airports.csv` (create the folder if needed). You can keep the dataset untracked.
+- Ensure `DATABASE_URL` is set, then seed: `npm run seed:airports`
+- The seed will upsert ICAO (falling back to IATA), name, lat, lon and will not overwrite existing lat/lon if already present.

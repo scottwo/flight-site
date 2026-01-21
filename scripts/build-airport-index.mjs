@@ -18,8 +18,8 @@ function parseCsvLine(line) {
   return out;
 }
 
-const CSV_PATH = path.join(process.cwd(), "scripts/data/ourairports/airports.csv");
-const OUT_PATH = path.join(process.cwd(), "scripts/data/airportIndex.json");
+const CSV_PATH = path.join(process.cwd(), "data/ourairports/airports.csv");
+const OUT_PATH = path.join(process.cwd(), "data/airportIndex.json");
 
 const raw = fs.readFileSync(CSV_PATH, "utf8").trim().split("\n");
 const header = parseCsvLine(raw[0]);
