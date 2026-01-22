@@ -99,17 +99,21 @@ async function main() {
   let skipped = 0;
 
   for (const row of records) {
-    const rawIcao = (row.icao_code || row.iata_code || "").trim();
-    if (!rawIcao) {
+    const rawCode = (row.gps_code || row.ident || row.iata_code || row.local_code || "").trim();
+    if (!rawCode) {
       skipped += 1;
       continue;
     }
-    const icao = rawIcao.toUpperCase();
+    const icao = rawCode.toUpperCase();
     const name = (row.name || "").trim() || null;
     const lat = Number.parseFloat(row.latitude_deg);
     const lon = Number.parseFloat(row.longitude_deg);
     const hasLat = Number.isFinite(lat);
     const hasLon = Number.isFinite(lon);
+    if (!hasLat || !hasLon) {
+      skipped += 1;
+      continue;
+    }
 
     const existing = await prisma.airport.findUnique({
       where: { icao },
@@ -155,6 +159,12 @@ async function main() {
   console.log(
     `Seeding complete. Inserted: ${inserted}, Updated: ${updated}, Skipped: ${skipped}, Total processed: ${records.length}`,
   );
+  const missingCoords = await prisma.airport.count({
+    where: {
+      OR: [{ lat: null }, { lon: null }],
+    },
+  });
+  console.log(`Airports with missing coords after seed: ${missingCoords}`);
 }
 
 main()

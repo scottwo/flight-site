@@ -31,6 +31,72 @@ const parseDate = (value?: string | null) => {
   return Number.isNaN(d.getTime()) ? null : d;
 };
 
+const ICAO_RE = /\b[A-Z]{4}\b/g;
+const FAA_LID_RE = /\b[A-Z]{1,2}\d{1,3}\b/g;
+
+function extractAirportCodes(text: string | null | undefined): string[] {
+  if (!text) return [];
+  const upper = text.toUpperCase();
+  const hits: string[] = [];
+  for (const m of upper.matchAll(ICAO_RE)) hits.push(m[0]);
+  for (const m of upper.matchAll(FAA_LID_RE)) hits.push(m[0]);
+  // de-dupe while preserving order
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const h of hits) {
+    if (!seen.has(h)) {
+      seen.add(h);
+      out.push(h);
+    }
+  }
+  return out;
+}
+
+function buildLegsForFlight(f: {
+  fromIcao: string;
+  toIcao: string;
+  route: string | null;
+  remarks: string | null;
+}): Array<{ fromIcao: string; toIcao: string }> {
+  const from = (f.fromIcao || "").toUpperCase();
+  const to = (f.toIcao || "").toUpperCase();
+
+  // Prefer explicit route field ordering; fall back to remarks ordering.
+  const viaRaw = extractAirportCodes(f.route);
+  const viaFallback = extractAirportCodes(f.remarks);
+  const via = viaRaw.length ? viaRaw : viaFallback;
+
+  // Remove endpoints if they appear in the middle list.
+  const cleanedVia = via.filter((c) => c !== from && c !== to);
+
+  // If there are no extracted airports, just return the direct leg.
+  if (!cleanedVia.length) {
+    return from && to ? [{ fromIcao: from, toIcao: to }] : [];
+  }
+
+  // If from==to (common in Scott's logbook), assume out-and-back visiting the listed airports in order.
+  if (from === to) {
+    const seq = [from, ...cleanedVia, from];
+    const legs: Array<{ fromIcao: string; toIcao: string }> = [];
+    for (let i = 0; i < seq.length - 1; i++) {
+      if (seq[i] && seq[i + 1] && seq[i] !== seq[i + 1]) {
+        legs.push({ fromIcao: seq[i], toIcao: seq[i + 1] });
+      }
+    }
+    return legs;
+  }
+
+  // Otherwise, assume from -> (via...) -> to.
+  const seq = [from, ...cleanedVia, to];
+  const legs: Array<{ fromIcao: string; toIcao: string }> = [];
+  for (let i = 0; i < seq.length - 1; i++) {
+    if (seq[i] && seq[i + 1] && seq[i] !== seq[i + 1]) {
+      legs.push({ fromIcao: seq[i], toIcao: seq[i + 1] });
+    }
+  }
+  return legs;
+}
+
 export async function POST(req: Request) {
   const { userId: clerkUserId } = await auth();
   if (!clerkUserId) {
@@ -171,12 +237,34 @@ export async function POST(req: Request) {
     // (We can wrap this in a transaction later once interactive tx typing is stable.)
     await prisma.flight.deleteMany({ where: { userId: internalUser.id } });
 
+    // Also scan route/remarks for ICAO-like tokens to pre-create airports for later enrichment.
+    flightsToCreate.forEach((f) => {
+      const candidates: string[] = [];
+      if (f.route) {
+        const upper = f.route.toUpperCase();
+        candidates.push(...(upper.match(ICAO_RE) || []));
+        candidates.push(...(upper.match(FAA_LID_RE) || []));
+      }
+      if (f.remarks) {
+        const upper = f.remarks.toUpperCase();
+        candidates.push(...(upper.match(ICAO_RE) || []));
+        candidates.push(...(upper.match(FAA_LID_RE) || []));
+      }
+      candidates.forEach((c) => icaos.add(c));
+    });
+
     const icaoList = Array.from(icaos);
     if (icaoList.length) {
-      await prisma.airport.createMany({
-        data: icaoList.map((icao) => ({ icao })),
-        skipDuplicates: true,
-      });
+      // Ensure airports exist but never overwrite lat/lon that may have been seeded already.
+      await Promise.all(
+        icaoList.map((icao) =>
+          prisma.airport.upsert({
+            where: { icao },
+            create: { icao },
+            update: {},
+          })
+        )
+      );
     }
 
     const airportMap = new Map<string, string>();
@@ -212,8 +300,15 @@ export async function POST(req: Request) {
         ifr: true,
         dayLandings: true,
         nightLandings: true,
+        route: true,
+        remarks: true,
       },
     });
+    const nonLocal = flights.filter((f) => f.fromIcao !== f.toIcao).length;
+    const distinctRoutes = Array.from(
+      new Set(flights.map((f) => `${f.fromIcao ?? "??"}->${f.toIcao ?? "??"}`)),
+    ).slice(0, 10);
+    console.log("import summary", { total: flights.length, nonLocal, sampleRoutes: distinctRoutes });
 
     const now = new Date();
     const cutoff90 = new Date(now);
@@ -348,18 +443,31 @@ export async function POST(req: Request) {
       { fromIcao: string; toIcao: string; flightsCount: number; totalTime: number; lastFlownAt: Date | null }
     >();
     for (const f of flights) {
-      const key = `${f.fromIcao}->${f.toIcao}`;
-      const cur = routeMap.get(key) ?? {
+      // Build legs using route/remarks when available. This makes KBTF->KBTF flights still produce map legs.
+      const legs = buildLegsForFlight({
         fromIcao: f.fromIcao,
         toIcao: f.toIcao,
-        flightsCount: 0,
-        totalTime: 0,
-        lastFlownAt: null,
-      };
-      cur.flightsCount += 1;
-      cur.totalTime += f.totalTime ?? 0;
-      cur.lastFlownAt = !cur.lastFlownAt || f.flightDate > cur.lastFlownAt ? f.flightDate : cur.lastFlownAt;
-      routeMap.set(key, cur);
+        route: (f as any).route ?? null,
+        remarks: (f as any).remarks ?? null,
+      });
+
+      const legCount = legs.length || 1;
+      const perLegTime = (f.totalTime ?? 0) / legCount;
+
+      for (const leg of legs) {
+        const key = `${leg.fromIcao}->${leg.toIcao}`;
+        const cur = routeMap.get(key) ?? {
+          fromIcao: leg.fromIcao,
+          toIcao: leg.toIcao,
+          flightsCount: 0,
+          totalTime: 0,
+          lastFlownAt: null,
+        };
+        cur.flightsCount += 1;
+        cur.totalTime += perLegTime;
+        cur.lastFlownAt = !cur.lastFlownAt || f.flightDate > cur.lastFlownAt ? f.flightDate : cur.lastFlownAt;
+        routeMap.set(key, cur);
+      }
     }
     if (routeMap.size) {
       await prisma.routeAgg.createMany({

@@ -156,6 +156,36 @@ export async function PilotProfilePage({
     return idx === 0 || month !== prevMonth ? month : "";
   });
   const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const airportEntries: [string, { code: string; lat: number; lon: number }][] = routes
+    .flatMap((r) => [
+      [r.from.icao, { code: r.from.icao, lat: r.from.lat, lon: r.from.lon }] as [
+        string,
+        { code: string; lat: number; lon: number },
+      ],
+      [r.to.icao, { code: r.to.icao, lat: r.to.lat, lon: r.to.lon }] as [
+        string,
+        { code: string; lat: number; lon: number },
+      ],
+    ])
+    .filter(
+      ([, v]) =>
+        typeof v.lat === "number" &&
+        Number.isFinite(v.lat) &&
+        typeof v.lon === "number" &&
+        Number.isFinite(v.lon),
+    );
+  const airportsForMap = Array.from(new Map(airportEntries).values());
+  const routesForMap = routes
+    .filter(
+      (r) =>
+        r.from.icao &&
+        r.to.icao &&
+        Number.isFinite(r.from.lat) &&
+        Number.isFinite(r.from.lon) &&
+        Number.isFinite(r.to.lat) &&
+        Number.isFinite(r.to.lon),
+    )
+    .map((r) => ({ from: r.from.icao, to: r.to.icao, count: r.count }));
 
   return (
     <div className="min-h-screen bg-[#eaf1f8] text-[#0b1f33]">
@@ -327,7 +357,7 @@ export async function PilotProfilePage({
                   Segments from your sample routes export, sized by trip count.
                 </p>
               </div>
-              <FlightsMap routes={routes} />
+              <FlightsMap airports={airportsForMap} routes={routesForMap} />
             </section>
           </main>
         </section>

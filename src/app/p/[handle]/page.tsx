@@ -5,12 +5,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { CumulativeHoursChart } from "@/components/CumulativeHoursChart";
+import FlightsMap from "@/components/FlightsMap";
 import { CurrencyCards } from "@/components/pilot/CurrencyCards";
 import { FunFacts, type FunFact } from "@/components/pilot/FunFacts";
 import { Heatmap } from "@/components/pilot/Heatmap";
 import { RecentFlights } from "@/components/pilot/RecentFlights";
 import { RoutesTable } from "@/components/pilot/RoutesTable";
 import { StatsCards } from "@/components/pilot/StatsCards";
+import { getUserMapData } from "@/lib/map/getMapData";
 import { prisma } from "@/lib/prisma";
 
 type PageProps = {
@@ -143,7 +145,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
   const currency180Start = new Date(now);
   currency180Start.setUTCDate(currency180Start.getUTCDate() - 180);
 
-  const [stats, dayAgg, routes, currencyFlights, recentFlights] = await Promise.all([
+  const [stats, dayAgg, routes, currencyFlights, recentFlights, mapData] = await Promise.all([
     prisma.profileStats.findUnique({
       where: { userId: profile.user.id },
     }),
@@ -179,6 +181,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
       take: 15,
       select: { flightDate: true, fromIcao: true, toIcao: true, totalTime: true, night: true, ifr: true },
     }),
+    getUserMapData(profile.user.id),
   ]);
 
   const heatmapData = dayAgg
@@ -211,6 +214,43 @@ export default async function PublicProfilePage({ params }: PageProps) {
       );
 
   const isOwner = userId && profile.user.clerkUserId === userId;
+  const airportLookup = new Map(mapData.airports.map((a) => [a.code, a]));
+  const mapRoutes = mapData.routes
+    .map((r) => {
+      const from = airportLookup.get(r.from);
+      const to = airportLookup.get(r.to);
+      if (!from || !to) return null;
+      return {
+        from: { icao: from.code, lat: from.lat, lon: from.lon },
+        to: { icao: to.code, lat: to.lat, lon: to.lon },
+        count: r.count,
+        month: "",
+      };
+    })
+    .filter((v): v is { from: { icao: string; lat: number; lon: number }; to: { icao: string; lat: number; lon: number }; count: number; month: string } => v !== null);
+  const missingAirportsNote =
+    mapData.missingAirports.length > 0
+      ? mapData.missingAirports.length > 8
+        ? `${mapData.missingAirports.slice(0, 8).join(", ")} + ${mapData.missingAirports.length - 8} more`
+        : mapData.missingAirports.join(", ")
+      : null;
+  type MapAirport = { code: string; lat: number; lon: number; name?: string | null };
+  type MapRoute = { from: string; to: string; count: number };
+  const airportsForMap: MapAirport[] = Array.from(
+    new Map(
+      mapRoutes.flatMap((r) => [
+        [r.from.icao, { code: r.from.icao, lat: r.from.lat, lon: r.from.lon } satisfies MapAirport],
+        [r.to.icao, { code: r.to.icao, lat: r.to.lat, lon: r.to.lon } satisfies MapAirport],
+      ]),
+    ).values(),
+  );
+  const routesForMap: MapRoute[] = mapRoutes
+    .filter((r) => r.from.icao && r.to.icao && Number.isFinite(r.from.lat) && Number.isFinite(r.from.lon) && Number.isFinite(r.to.lat) && Number.isFinite(r.to.lon))
+    .map((r) => ({
+      from: r.from.icao,
+      to: r.to.icao,
+      count: r.count,
+    }));
 
   return (
     <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
@@ -246,15 +286,24 @@ export default async function PublicProfilePage({ params }: PageProps) {
           <div className="flex items-baseline justify-between gap-4">
             <div>
               <h2 className="text-lg font-semibold text-[var(--text)]">Routes map</h2>
-              <p className="text-sm text-[var(--muted)]">
-                Map rendering will appear once we enrich airports with lat/long (airport database lookup).
-              </p>
+              <p className="text-sm text-[var(--muted)]">Mapped routes from imported flights.</p>
             </div>
-            <p className="text-xs text-[var(--muted-2)]">{routes.length} routes</p>
+            <p className="text-xs text-[var(--muted-2)]">{mapRoutes.length} routes</p>
           </div>
-          <div className="mt-4 flex h-64 items-center justify-center rounded-2xl border border-dashed border-[var(--border)] bg-[var(--panel-muted)]">
-            <p className="text-sm text-[var(--muted)]">Map coming soon</p>
-          </div>
+          {routesForMap.length > 0 ? (
+            <div className="mt-4 overflow-hidden rounded-2xl border border-[var(--border)]">
+              <FlightsMap airports={airportsForMap} routes={routesForMap} />
+            </div>
+          ) : (
+            <div className="mt-4 flex h-64 items-center justify-center rounded-2xl border border-dashed border-[var(--border)] bg-[var(--panel-muted)]">
+              <p className="text-sm text-[var(--muted)]">No mapped routes yet. Seed airports or import flights.</p>
+            </div>
+          )}
+          {missingAirportsNote ? (
+            <p className="mt-3 text-xs text-[var(--muted)]">
+              Some airports are missing coordinates: {missingAirportsNote}
+            </p>
+          ) : null}
         </div>
         <div className="grid gap-4 lg:grid-cols-3">
           <div className="lg:col-span-2">

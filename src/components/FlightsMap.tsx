@@ -1,6 +1,5 @@
 "use client";
 
-import type { RouteLeg } from "@/lib/routes";
 import { useEffect, useRef } from "react";
 
 import Map from "ol/Map";
@@ -19,7 +18,10 @@ import Overlay from "ol/Overlay";
 import { unByKey } from "ol/Observable";
 import type { EventsKey } from "ol/events";
 
-export default function FlightsMap({ routes }: { routes: RouteLeg[] }) {
+type Airport = { code: string; lat: number; lon: number; name?: string | null };
+type Route = { from: string; to: string; count: number };
+
+export default function FlightsMap({ airports, routes }: { airports: Airport[]; routes: Route[] }) {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const mapObj = useRef<Map | null>(null);
   const routeSource = useRef(new VectorSource());
@@ -52,7 +54,7 @@ export default function FlightsMap({ routes }: { routes: RouteLeg[] }) {
             if (c <= q1) tier = "thin";
             else if (c <= q2) tier = "med";
 
-            const width = Math.min(tier === "thin" ? 1 : tier === "med" ? 2 : 3, 3);
+            const width = Math.min(tier === "thin" ? 2 : tier === "med" ? 4 : 6, 6);
             if (!routeStyleCache.current[tier]) {
               routeStyleCache.current[tier] = new Style({
                 stroke: new Stroke({
@@ -96,7 +98,7 @@ export default function FlightsMap({ routes }: { routes: RouteLeg[] }) {
     mapObj.current = map;
     const tooltipEl = document.createElement("div");
     tooltipEl.className =
-      "pointer-events-none rounded-md border border-[#b6c8dc] bg-white px-2 py-1 text-[11px] font-semibold text-[#0b1f33] shadow";
+      "pointer-events-none rounded-md border border-[var(--border)] bg-[var(--panel)] px-2 py-1 text-[11px] font-semibold text-[var(--text)] shadow";
     tooltipRef.current = tooltipEl;
     const overlay = new Overlay({
       element: tooltipEl,
@@ -129,20 +131,25 @@ export default function FlightsMap({ routes }: { routes: RouteLeg[] }) {
     const map = mapObj.current;
     if (!map) return;
 
-    const features: Feature<LineString>[] = [];
-    const routeFeatures: Feature<LineString>[] = routes.map((route) => {
-      const coords = [
-        fromLonLat([route.from.lon, route.from.lat]),
-        fromLonLat([route.to.lon, route.to.lat]),
-      ];
-      const feature = new Feature(new LineString(coords));
-      feature.set("count", route.count);
-      feature.set("label", `${route.from.icao} → ${route.to.icao}`);
-      features.push(feature);
-      return feature;
-    });
+    const airportEntries = airports.map((a) => [a.code, a] as [string, Airport]);
+    const airportByCode = new globalThis.Map<string, Airport>(airportEntries);
+    const routeFeatures: Feature<LineString>[] = routes
+      .map((route) => {
+        const from = airportByCode.get(route.from);
+        const to = airportByCode.get(route.to);
+        if (!from || !to) return null;
+        const coords = [
+          fromLonLat([from.lon, from.lat]),
+          fromLonLat([to.lon, to.lat]),
+        ];
+        const feature = new Feature(new LineString(coords));
+        feature.set("count", route.count);
+        feature.set("label", `${route.from} → ${route.to}`);
+        return feature;
+      })
+      .filter((f): f is Feature<LineString> => !!f);
 
-    const counts = features
+    const counts = routeFeatures
       .map((f) => Number(f.get("count") ?? f.get("trips") ?? 1))
       .filter((n) => Number.isFinite(n))
       .sort((a, b) => a - b);
@@ -153,16 +160,10 @@ export default function FlightsMap({ routes }: { routes: RouteLeg[] }) {
     };
     routeQuantiles.current = { q1: quantile(0.33), q2: quantile(0.66) };
 
-    const seen = new Set<string>();
-    const airportFeatures: Feature<Point>[] = [];
-    routes.forEach((route) => {
-      [route.from, route.to].forEach((apt) => {
-        if (seen.has(apt.icao)) return;
-        seen.add(apt.icao);
-        const feature = new Feature(new Point(fromLonLat([apt.lon, apt.lat])));
-        feature.set("icao", apt.icao);
-        airportFeatures.push(feature);
-      });
+    const airportFeatures: Feature<Point>[] = airports.map((apt) => {
+      const feature = new Feature(new Point(fromLonLat([apt.lon, apt.lat])));
+      feature.set("icao", apt.code);
+      return feature;
     });
 
     routeSource.current.clear();
