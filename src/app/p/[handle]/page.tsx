@@ -157,7 +157,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
     prisma.routeAgg.findMany({
       where: { userId: profile.user.id },
       orderBy: [{ flightsCount: "desc" }, { lastFlownAt: "desc" }],
-      take: 30,
+      take: 5,
       select: { fromIcao: true, toIcao: true, flightsCount: true, totalTime: true, lastFlownAt: true },
     }),
     prisma.flight.findMany({
@@ -178,7 +178,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
     prisma.flight.findMany({
       where: { userId: profile.user.id },
       orderBy: { flightDate: "desc" },
-      take: 15,
+      take: 5,
       select: { flightDate: true, fromIcao: true, toIcao: true, totalTime: true, night: true, ifr: true },
     }),
     getUserMapData(profile.user.id),

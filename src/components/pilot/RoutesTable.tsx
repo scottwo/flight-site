@@ -37,9 +37,9 @@ export function RoutesTable({ routes }: Props) {
     <section className="rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
       <div className="mb-3 flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-[var(--text)]">Routes</h2>
+          <h2 className="text-lg font-semibold text-[var(--text)]">Top 5 Routes</h2>
           <p className="text-sm text-[var(--muted)]">
-            {routes.length} routes • {uniqueAirports.size} airports • Most common:{" "}
+            {uniqueAirports.size} airports • Most common:{" "}
             {mostCommon.fromIcao} → {mostCommon.toIcao}
           </p>
         </div>
