@@ -64,6 +64,9 @@ model ImportJob {
   startedAt         DateTime?
   finishedAt        DateTime?
 
+  missingAirportCodes String[] @default([])
+  warnings             Json?
+
   error            String?
 
   createdAt        DateTime      @default(now())

@@ -12,6 +12,8 @@ type Job = {
   bytes: number | null;
   error: string | null;
   importedCount?: number | null;
+  missingAirportCodes?: string[] | null;
+  warnings?: any;
   createdAt: string;
   updatedAt: string;
 };
@@ -164,6 +166,19 @@ export default function LogTenTsvUploadCard() {
               <p className="font-semibold text-[var(--text)]">
                 Flights imported: {job.importedCount}
               </p>
+            )}
+            {job.status === "SUCCEEDED" && job.missingAirportCodes && job.missingAirportCodes.length > 0 && (
+              <div className="mt-3 rounded-xl border border-yellow-300 bg-yellow-50/70 p-3 text-[var(--text)]">
+                <p className="text-sm font-semibold text-yellow-800">
+                  Some airports in routes/remarks were not recognized and were skipped for mapping.
+                </p>
+                <p className="text-xs text-yellow-900">
+                  {job.missingAirportCodes.slice(0, 10).join(", ")}
+                  {job.missingAirportCodes.length > 10
+                    ? ` + ${job.missingAirportCodes.length - 10} more`
+                    : ""}
+                </p>
+              </div>
             )}
           </div>
           {job.status === "UPLOADED" && (

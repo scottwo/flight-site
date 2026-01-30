@@ -52,19 +52,37 @@ function extractAirportCodes(text: string | null | undefined): string[] {
   return out;
 }
 
-function buildLegsForFlight(f: {
-  fromIcao: string;
-  toIcao: string;
-  route: string | null;
-  remarks: string | null;
-}): Array<{ fromIcao: string; toIcao: string }> {
+function buildLegsForFlight(
+  f: {
+    fromIcao: string;
+    toIcao: string;
+    route: string | null;
+    remarks: string | null;
+  },
+  knownAirportCodes?: Set<string>,
+  missing?: Set<string>,
+): Array<{ fromIcao: string; toIcao: string }> {
   const from = (f.fromIcao || "").toUpperCase();
   const to = (f.toIcao || "").toUpperCase();
 
   // Prefer explicit route field ordering; fall back to remarks ordering.
   const viaRaw = extractAirportCodes(f.route);
   const viaFallback = extractAirportCodes(f.remarks);
-  const via = viaRaw.length ? viaRaw : viaFallback;
+  const viaCandidates = viaRaw.length ? viaRaw : viaFallback;
+
+  // Filter to known airports if provided; collect missing codes.
+  const filterKnown = (code: string) => {
+    if (!knownAirportCodes) return true;
+    const ok = knownAirportCodes.has(code);
+    if (!ok && missing) missing.add(code);
+    return ok;
+  };
+
+  if (knownAirportCodes) {
+    if (!filterKnown(from) || !filterKnown(to)) return [];
+  }
+
+  const via = viaCandidates.filter(filterKnown);
 
   // Remove endpoints if they appear in the middle list.
   const cleanedVia = via.filter((c) => c !== from && c !== to);
@@ -233,11 +251,16 @@ export async function POST(req: Request) {
       })
       .filter((v): v is Prisma.FlightCreateManyInput => v !== null);
 
-    // MVP: Replace flights and ensure airports exist.
+    const airportMap = new Map<string, string>();
+    const knownAirportCodes = new Set<string>();
+    const missingAirportCodes = new Set<string>();
+
+    // MVP: Replace flights.
     // (We can wrap this in a transaction later once interactive tx typing is stable.)
     await prisma.flight.deleteMany({ where: { userId: internalUser.id } });
 
-    // Also scan route/remarks for ICAO-like tokens to pre-create airports for later enrichment.
+    // Scan route/remarks for ICAO-like tokens (for map legs) but do not create airports here.
+    const extractedCandidates = new Set<string>();
     flightsToCreate.forEach((f) => {
       const candidates: string[] = [];
       if (f.route) {
@@ -250,37 +273,33 @@ export async function POST(req: Request) {
         candidates.push(...(upper.match(ICAO_RE) || []));
         candidates.push(...(upper.match(FAA_LID_RE) || []));
       }
-      candidates.forEach((c) => icaos.add(c));
+      candidates.forEach((c) => extractedCandidates.add(c));
     });
 
-    const icaoList = Array.from(icaos);
-    if (icaoList.length) {
-      // Ensure airports exist but never overwrite lat/lon that may have been seeded already.
-      await Promise.all(
-        icaoList.map((icao) =>
-          prisma.airport.upsert({
-            where: { icao },
-            create: { icao },
-            update: {},
-          })
-        )
-      );
-    }
-
-    const airportMap = new Map<string, string>();
-    if (icaoList.length) {
+    const lookupCodes = Array.from(new Set([...icaos, ...extractedCandidates]));
+    if (lookupCodes.length) {
       const found = await prisma.airport.findMany({
-        where: { icao: { in: icaoList } },
+        where: { icao: { in: lookupCodes } },
         select: { id: true, icao: true },
       });
-      found.forEach((apt) => airportMap.set(apt.icao, apt.id));
+      found.forEach((apt) => {
+        airportMap.set(apt.icao, apt.id);
+        knownAirportCodes.add(apt.icao);
+      });
+      lookupCodes.forEach((code) => {
+        if (!knownAirportCodes.has(code)) missingAirportCodes.add(code);
+      });
     }
 
-    const flightsWithIds = flightsToCreate.map((f) => ({
-      ...f,
-      fromAirportId: airportMap.get(f.fromIcao) ?? null,
-      toAirportId: airportMap.get(f.toIcao) ?? null,
-    }));
+    const flightsWithIds = flightsToCreate.map((f) => {
+      if (!airportMap.has(f.fromIcao)) missingAirportCodes.add(f.fromIcao);
+      if (!airportMap.has(f.toIcao)) missingAirportCodes.add(f.toIcao);
+      return {
+        ...f,
+        fromAirportId: airportMap.get(f.fromIcao) ?? null,
+        toAirportId: airportMap.get(f.toIcao) ?? null,
+      };
+    });
 
     if (flightsWithIds.length) {
       await prisma.flight.createMany({ data: flightsWithIds });
@@ -444,12 +463,16 @@ export async function POST(req: Request) {
     >();
     for (const f of flights) {
       // Build legs using route/remarks when available. This makes KBTF->KBTF flights still produce map legs.
-      const legs = buildLegsForFlight({
-        fromIcao: f.fromIcao,
-        toIcao: f.toIcao,
-        route: (f as any).route ?? null,
-        remarks: (f as any).remarks ?? null,
-      });
+      const legs = buildLegsForFlight(
+        {
+          fromIcao: f.fromIcao,
+          toIcao: f.toIcao,
+          route: (f as any).route ?? null,
+          remarks: (f as any).remarks ?? null,
+        },
+        knownAirportCodes,
+        missingAirportCodes,
+      );
 
       const legCount = legs.length || 1;
       const perLegTime = (f.totalTime ?? 0) / legCount;
@@ -488,6 +511,11 @@ export async function POST(req: Request) {
       data: {
         status: "SUCCEEDED",
         importedCount: flightsToCreate.length,
+        missingAirportCodes: Array.from(missingAirportCodes).sort(),
+        warnings:
+          missingAirportCodes.size > 0
+            ? { missingAirportCodes: Array.from(missingAirportCodes).sort(), missingCount: missingAirportCodes.size }
+            : Prisma.DbNull,
         error: null,
         finishedAt: new Date(),
       },
