@@ -14,6 +14,7 @@ datasource db {
 
 enum ImportProvider {
   LOGTEN_TSV
+  FORE_FLIGHT_CSV
 }
 
 enum ImportStatus {

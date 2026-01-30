@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-import { prisma } from "@/lib/prisma";
+import { prisma, ImportProvider } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
@@ -21,7 +21,7 @@ export async function GET() {
   }
 
   const latest = await prisma.importJob.findFirst({
-    where: { userId: user.id, provider: "LOGTEN_TSV" },
+    where: { userId: user.id, provider: ImportProvider.FORE_FLIGHT_CSV },
     orderBy: { createdAt: "desc" },
   });
 

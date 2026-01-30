@@ -22,6 +22,8 @@ const pgPool =
 
 const adapter = globalForPrisma.pgAdapter ?? new PrismaPg(pgPool);
 
+export { ImportProvider } from "@prisma/client";
+
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
