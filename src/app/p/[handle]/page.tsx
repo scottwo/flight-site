@@ -260,11 +260,9 @@ export default async function PublicProfilePage({ params }: PageProps) {
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--muted-2)]">Pilot profile</p>
             <h1 className="text-4xl font-semibold text-[var(--text)]">{profile.displayName}</h1>
             <p className="text-[var(--muted)]">@{profile.handle}</p>
-            {profile.headline ? (
-              <p className="text-sm text-[var(--muted-2)]">{profile.headline}</p>
-            ) : (
-              <p className="text-sm text-[var(--muted-2)]">Headline coming soon.</p>
-            )}
+            <p className="text-sm text-[var(--muted-2)]">
+              {profile.headline ?? "Headline coming soon."}
+            </p>
           </div>
           {isOwner ? (
             <Link

@@ -3,14 +3,28 @@ export const runtime = "nodejs";
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import LogTenTsvUploadCard from "@/components/LogTenTsvUploadCard";
 import ForeFlightCsvUploadCard from "@/components/ForeFlightCsvUploadCard";
+import HandleEditor from "@/components/HandleEditor";
+import HeadlineEditor from "@/components/HeadlineEditor";
+import LogTenTsvUploadCard from "@/components/LogTenTsvUploadCard";
+import { prisma } from "@/lib/prisma";
 
 export default async function SettingsPage() {
   const { userId } = await auth();
   if (!userId) {
     redirect("/sign-in");
   }
+  const dbUser = await prisma.user.findUnique({
+    where: { clerkUserId: userId },
+    select: {
+      id: true,
+      profile: {
+        select: { handle: true, headline: true },
+      },
+    },
+  });
+
+  const profile = dbUser?.profile ?? null;
 
   return (
     <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
@@ -27,10 +41,17 @@ export default async function SettingsPage() {
 
         <section className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-[var(--text)]">Profile</h2>
-          <p className="text-sm text-[var(--muted)]">Handle, display name, headline (to be editable).</p>
-          <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--panel-muted)] p-4 text-sm text-[var(--muted)]">
-            TODO: add form fields for handle, display name, headline.
-          </div>
+          <p className="text-sm text-[var(--muted)]">Handle and headline.</p>
+          {profile ? (
+            <div className="space-y-6">
+              <HandleEditor initialHandle={profile.handle} />
+              <HeadlineEditor initialHeadline={profile.headline} />
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--panel-muted)] p-4 text-sm text-[var(--muted)]">
+              Loading profile...
+            </div>
+          )}
         </section>
 
         <section className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
