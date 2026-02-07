@@ -2,11 +2,14 @@ import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { isAlphaFull } from "@/lib/alphaLimit";
+
 export default async function Home() {
   const { userId } = await auth();
   if (userId) {
     redirect("/dashboard");
   }
+  const alphaFull = await isAlphaFull();
 
   return (
     <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
@@ -29,6 +32,21 @@ export default async function Home() {
             >
               View demo
             </Link>
+            {alphaFull ? (
+              <Link
+                href="/alpha-full"
+                className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-[var(--panel)] px-5 py-3 text-sm font-semibold text-[var(--text)] shadow-sm transition hover:bg-[var(--panel-muted)]"
+              >
+                Alpha full (join waitlist)
+              </Link>
+            ) : (
+              <Link
+                href="/sign-up"
+                className="inline-flex items-center justify-center rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+              >
+                Sign up
+              </Link>
+            )}
           </div>
         </header>
 

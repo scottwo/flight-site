@@ -4,6 +4,7 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 
+import { isAlphaFull } from "@/lib/alphaLimit";
 import { prisma } from "@/lib/prisma";
 
 function slugify(input: string) {
@@ -45,6 +46,18 @@ export async function POST() {
     clerkUser?.primaryEmailAddress?.emailAddress ??
     clerkUser?.emailAddresses?.[0]?.emailAddress ??
     null;
+
+  const existingUser = await prisma.user.findUnique({
+    where: { clerkUserId: userId },
+    select: { id: true, email: true },
+  });
+
+  if (!existingUser && (await isAlphaFull())) {
+    return NextResponse.json(
+      { error: "Alpha is full. Please try again later." },
+      { status: 403 },
+    );
+  }
 
   const user = await prisma.user.upsert({
     where: { clerkUserId: userId },
