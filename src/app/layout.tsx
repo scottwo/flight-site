@@ -7,6 +7,8 @@ import {
   SignUpButton,
   UserButton,
 } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
+import prisma from "@/lib/prisma";
 import "./globals.css";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -15,11 +17,26 @@ export const metadata: Metadata = {
   description: "Create a shareable pilot profile with stats, maps, and currency—powered by your logbook.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { userId } = await auth();
+
+  let myHandle: string | null = null;
+  if (userId) {
+    const dbUser = await prisma.user.findUnique({
+      where: { clerkUserId: userId },
+      select: {
+        profile: {
+          select: { handle: true },
+        },
+      },
+    });
+    myHandle = dbUser?.profile?.handle ?? null;
+  }
+
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
@@ -47,12 +64,26 @@ export default function RootLayout({
                 >
                   Demo
                 </a>
-                <a
-                  href="/pricing"
-                  className="rounded-full px-4 py-2 transition hover:bg-[var(--panel-muted)] hover:text-[var(--text-strong)]"
-                >
-                  Pricing
-                </a>
+                <SignedOut>
+                  <a
+                    href="/pricing"
+                    className="rounded-full px-4 py-2 transition hover:bg-[var(--panel-muted)] hover:text-[var(--text-strong)]"
+                  >
+                    Pricing
+                  </a>
+                </SignedOut>
+                <SignedIn>
+                  {myHandle ? (
+                    <a
+                      href={`/p/${myHandle}`}
+                      className="rounded-full px-4 py-2 transition hover:bg-[var(--panel-muted)] hover:text-[var(--text-strong)]"
+                    >
+                      My Page
+                    </a>
+                  ) : (
+                    <span className="rounded-full px-4 py-2 text-[var(--muted-2)] opacity-60">My Page</span>
+                  )}
+                </SignedIn>
                 <SignedIn>
                   <a
                     href="/dashboard"

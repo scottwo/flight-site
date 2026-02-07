@@ -112,5 +112,16 @@ export async function POST() {
 }
 
 export async function GET() {
-  return POST();
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const profile = await prisma.profile.findUnique({
+    where: { userId },
+    select: { handle: true, userId: true },
+  });
+  if (!profile) {
+    return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+  }
+  return NextResponse.json({ ok: true, handle: profile.handle });
 }
