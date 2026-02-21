@@ -2,38 +2,8 @@ export const runtime = "nodejs";
 
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { randomUUID } from "crypto";
-
-import { isAlphaFull } from "@/lib/alphaLimit";
+import { AlphaFullError, ensureUserAndProfile } from "@/lib/bootstrapUserProfile";
 import { prisma } from "@/lib/prisma";
-
-function slugify(input: string) {
-  return input
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .replace(/--+/g, "-");
-}
-
-async function generateUniqueHandle(base: string) {
-  const normalized = slugify(base).slice(0, 20) || "user";
-  let candidate = normalized;
-  let attempts = 0;
-
-  while (attempts < 5) {
-    const existing = await prisma.profile.findUnique({
-      where: { handle: candidate },
-      select: { userId: true },
-    });
-    if (!existing) {
-      return candidate;
-    }
-    attempts += 1;
-    candidate = `${normalized}-${Math.random().toString(36).slice(2, 6)}`;
-  }
-
-  return `${normalized}-${randomUUID().slice(0, 6)}`;
-}
 
 export async function POST() {
   const { userId } = await auth();
@@ -41,74 +11,16 @@ export async function POST() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const clerkUser = await currentUser();
-  const email =
-    clerkUser?.primaryEmailAddress?.emailAddress ??
-    clerkUser?.emailAddresses?.[0]?.emailAddress ??
-    null;
-
-  const existingUser = await prisma.user.findUnique({
-    where: { clerkUserId: userId },
-    select: { id: true, email: true },
-  });
-
-  if (!existingUser && (await isAlphaFull())) {
-    return NextResponse.json(
-      { error: "Alpha is full. Please try again later." },
-      { status: 403 },
-    );
-  }
-
-  const user = await prisma.user.upsert({
-    where: { clerkUserId: userId },
-    update: {
-      email,
-    },
-    create: {
-      clerkUserId: userId,
-      email,
-    },
-  });
-
-  let profile = await prisma.profile.findUnique({
-    where: { userId: user.id },
-  });
-
-  if (!profile) {
-    const displayName =
-      [clerkUser?.firstName, clerkUser?.lastName].filter(Boolean).join(" ") ||
-      "Pilot";
-
-    const handle = await generateUniqueHandle(userId);
-
-    try {
-      profile = await prisma.profile.create({
-        data: {
-          userId: user.id,
-          handle,
-          displayName,
-        },
-      });
-    } catch (error) {
-      const code = (error as { code?: string }).code;
-      if (code === "P2002") {
-        const fallbackHandle = await generateUniqueHandle(
-          `${userId}-${Date.now()}`,
-        );
-        profile = await prisma.profile.create({
-          data: {
-            userId: user.id,
-            handle: fallbackHandle,
-            displayName,
-          },
-        });
-      } else {
-        throw error;
-      }
+  try {
+    const clerkUser = await currentUser();
+    const { user, profile } = await ensureUserAndProfile(userId, clerkUser);
+    return NextResponse.json({ id: user.id, handle: profile.handle });
+  } catch (error) {
+    if (error instanceof AlphaFullError) {
+      return NextResponse.json({ error: error.message }, { status: 403 });
     }
+    throw error;
   }
-
-  return NextResponse.json({ id: user.id, handle: profile.handle });
 }
 
 export async function GET() {
@@ -116,8 +28,8 @@ export async function GET() {
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const profile = await prisma.profile.findUnique({
-    where: { userId },
+  const profile = await prisma.profile.findFirst({
+    where: { user: { clerkUserId: userId } },
     select: { handle: true, userId: true },
   });
   if (!profile) {

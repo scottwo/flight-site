@@ -3,6 +3,7 @@ export const runtime = "nodejs";
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import DeleteAccountSection from "@/components/DeleteAccountSection";
 import HandleEditor from "@/components/HandleEditor";
 import HeadlineEditor from "@/components/HeadlineEditor";
 import ThemeScope from "@/components/ThemeScope";
@@ -106,6 +107,8 @@ export default async function SettingsPage() {
             </Link>
           </div>
         </section>
+
+        <DeleteAccountSection />
 
         <Link
           href="/dashboard"

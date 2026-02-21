@@ -7,9 +7,9 @@ import {
   SignUpButton,
   UserButton,
 } from "@clerk/nextjs";
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
-import prisma from "@/lib/prisma";
+import { ensureUserAndProfile } from "@/lib/bootstrapUserProfile";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -26,15 +26,9 @@ export default async function RootLayout({
 
   let myHandle: string | null = null;
   if (userId) {
-    const dbUser = await prisma.user.findUnique({
-      where: { clerkUserId: userId },
-      select: {
-        profile: {
-          select: { handle: true },
-        },
-      },
-    });
-    myHandle = dbUser?.profile?.handle ?? null;
+    const clerkUser = await currentUser();
+    const { profile } = await ensureUserAndProfile(userId, clerkUser);
+    myHandle = profile.handle;
   }
 
   return (
