@@ -81,7 +81,8 @@ export default async function DashboardPage() {
             <ul className="mt-3 space-y-2 text-sm text-[var(--muted)]">
               <li>• Confirm your handle and display name in Settings.</li>
               <li>• Upload and import your logbook in Import data.</li>
-              <li>• Share your public link with recruiters or crew.</li>
+              <li>• Upload your resume. (Coming Soon!)</li>
+              <li>• Share your public link.</li>
             </ul>
           </div>
         </section>

@@ -151,10 +151,10 @@ export default async function RootLayout({
                 Home
               </Link>
               <span className="text-[var(--muted-2)]">•</span>
-              <Link href="/pricing" className="hover:text-[var(--text-strong)]">
+              {/* <Link href="/pricing" className="hover:text-[var(--text-strong)]">
                 Pricing
-              </Link>
-              <span className="text-[var(--muted-2)]">•</span>
+              </Link> */}
+              {/* <span className="text-[var(--muted-2)]">•</span> */}
               <Link href="/privacy" className="hover:text-[var(--text-strong)]">
                 Privacy
               </Link>

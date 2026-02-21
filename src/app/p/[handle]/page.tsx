@@ -336,15 +336,6 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
         <RecentFlights flights={recentFlights} />
 
-        <div className="flex gap-3 text-sm text-[var(--muted)]">
-          <Link href="/p/demo" className="hover:text-[var(--text-strong)]">
-            View demo
-          </Link>
-          <span className="text-[var(--muted-2)]">•</span>
-          <Link href="/" className="hover:text-[var(--text-strong)]">
-            Home
-          </Link>
-        </div>
       </div>
     </ThemeScope>
   );

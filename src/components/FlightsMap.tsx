@@ -237,9 +237,6 @@ export default function FlightsMap({ airports, routes }: { airports: Airport[]; 
         className="relative h-[320px] w-full overflow-hidden rounded-xl bg-[var(--bg)] pointer-events-auto sm:h-[380px] lg:h-[420px]"
         aria-label="Flight routes map"
       />
-      <p className="mt-2 text-[11px] text-[var(--muted-2)]">
-        Tip: verify tile requests in Network tab (tile.openstreetmap.org) if the basemap is blank.
-      </p>
     </div>
   );
 }

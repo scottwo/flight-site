@@ -27,7 +27,11 @@ export async function PilotProfilePage({
   statsOverride?: StatsType;
   heatmapOverride?: HeatmapType;
   routesOverride?: RoutesType;
-  cumulativeOverride?: { data: { date: string; total: number; cumulative: number }[]; totalHours: number };
+  cumulativeOverride?: {
+    data: { date: string; total: number; cumulative: number }[];
+    totalHours: number;
+    yAxisMin?: number;
+  };
 } = {}) {
   const [stats, heatmap, routes] = await Promise.all([
     statsOverride ?? getStats(dataDir),
@@ -249,7 +253,11 @@ export async function PilotProfilePage({
                 </div>
                 {cumulativeOverride ? (
                   <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-5 shadow-sm">
-                    <CumulativeHoursChart data={cumulativeOverride.data} totalHours={cumulativeOverride.totalHours} />
+                    <CumulativeHoursChart
+                      data={cumulativeOverride.data}
+                      totalHours={cumulativeOverride.totalHours}
+                      yAxisMin={cumulativeOverride.yAxisMin}
+                    />
                   </div>
                 ) : null}
               </section>
@@ -293,7 +301,7 @@ export async function PilotProfilePage({
                 <div className="space-y-1">
                   <h2 className="text-2xl font-semibold text-[var(--text)]">Recency heatmap</h2>
                   <p className="text-sm text-[var(--muted-2)]">
-                    Last 90 days of flying. Each square is a flight day sized by hours; darker means more time that day.
+                    Last 90 days of flying.
                   </p>
                 </div>
                 <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel-muted)] p-4 shadow-inner">
@@ -380,9 +388,6 @@ export async function PilotProfilePage({
           <div className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-4 shadow-sm sm:p-6">
             <div className="space-y-2">
               <h2 className="text-2xl font-semibold text-[var(--text)]">Operational experience</h2>
-              <p className="text-sm text-[var(--muted-2)]">
-                The environments and procedures you know best.
-              </p>
             </div>
             <ul className="space-y-3 text-sm text-[var(--muted)]">
               <li>Hub-and-spoke ops across SLC, MSP, ATL, JFK/LGA, SEA, DEN</li>
@@ -397,9 +402,6 @@ export async function PilotProfilePage({
           <div className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-4 shadow-sm sm:p-6 lg:col-span-2">
             <div className="space-y-2">
               <h2 className="text-2xl font-semibold text-[var(--text)]">Recent roles</h2>
-              <p className="text-sm text-[var(--muted-2)]">
-                A quick timeline you can refine with employers, dates, and fleets.
-              </p>
             </div>
             <div className="space-y-4">
               {[

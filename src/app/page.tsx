@@ -15,15 +15,11 @@ export default async function Home() {
     <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <div className="mx-auto flex max-w-6xl flex-col gap-12 px-6 py-16">
         <header className="space-y-4">
-          <p className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--accent-text)] shadow-sm">
-            MyPilotPage
-          </p>
           <h1 className="text-4xl font-semibold leading-tight text-[var(--text)] sm:text-5xl">
-            Your public pilot profile, ready in minutes.
+            Your logbook, but pretty.
           </h1>
           <p className="max-w-3xl text-lg text-[var(--muted)]">
-            A modern pilot profile powered by your logbook. Publish a shareable page, keep your flight stats synced, and
-            control what recruiters see.
+            Upload your logbook, pick your style, and publish a polished profile you can share in minutes.
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
@@ -54,15 +50,15 @@ export default async function Home() {
           {[
             {
               title: "Instant pilot page",
-              desc: "Share a clean, mobile-friendly profile with your handle.",
+              desc: "Launch a clean, mobile-friendly profile with your own handle.",
             },
             {
-              title: "Data-ready",
-              desc: "Built to ingest your flight stats and show snapshots (coming soon).",
+              title: "Importer-ready",
+              desc: "Built for flight data from major electronic logbooks.",
             },
             {
-              title: "Clerk auth",
-              desc: "Secure sign-in, protected dashboard, and private APIs.",
+              title: "Professional visuals",
+              desc: "Show heatmaps, route maps, currency snapshots, and cumulative hours at a glance.",
             },
           ].map((item) => (
             <div

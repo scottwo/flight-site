@@ -9,6 +9,7 @@ type Point = {
 type Props = {
   data: Point[];
   totalHours: number;
+  yAxisMin?: number;
 };
 
 function formatDateLabel(date: string) {
@@ -16,7 +17,7 @@ function formatDateLabel(date: string) {
   return `${month}/${year.slice(-2)}`;
 }
 
-export function CumulativeHoursChart({ data, totalHours }: Props) {
+export function CumulativeHoursChart({ data, totalHours, yAxisMin }: Props) {
   if (!data || data.length < 2) {
     return (
       <section className="rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
@@ -35,14 +36,17 @@ export function CumulativeHoursChart({ data, totalHours }: Props) {
   const height = 260;
   const padding = 40;
 
-  const maxY = Math.max(...data.map((d) => d.cumulative), 1);
+  const minDataY = Math.min(...data.map((d) => d.cumulative));
+  const minY = yAxisMin !== undefined ? Math.min(yAxisMin, minDataY) : 0;
+  const maxY = Math.max(...data.map((d) => d.cumulative), minY + 1);
+  const rangeY = Math.max(1, maxY - minY);
   const minDate = new Date(`${data[0].date}T00:00:00Z`).getTime();
   const maxDate = new Date(`${data[data.length - 1].date}T00:00:00Z`).getTime();
   const rangeX = Math.max(1, maxDate - minDate);
 
   const points = data.map((d) => {
     const x = padding + ((new Date(`${d.date}T00:00:00Z`).getTime() - minDate) / rangeX) * (width - padding * 2);
-    const y = height - padding - (d.cumulative / maxY) * (height - padding * 2);
+    const y = height - padding - ((d.cumulative - minY) / rangeY) * (height - padding * 2);
     return { x, y };
   });
 
@@ -57,11 +61,11 @@ export function CumulativeHoursChart({ data, totalHours }: Props) {
 
   const yTicks = 4;
   const yLabels = Array.from({ length: yTicks + 1 }, (_, i) => {
-    const value = (maxY / yTicks) * i;
+    const value = minY + (rangeY / yTicks) * i;
     const y =
       height -
       padding -
-      (value / maxY) * (height - padding * 2);
+      ((value - minY) / rangeY) * (height - padding * 2);
     return { value, y };
   });
 
@@ -78,11 +82,11 @@ export function CumulativeHoursChart({ data, totalHours }: Props) {
       </div>
       <div className="w-full overflow-x-auto">
         <svg
-          width={width}
+          width="100%"
           viewBox={`0 0 ${width} ${height}`}
           role="img"
           aria-label="Cumulative flight time line chart"
-          className="min-w-[640px] text-[var(--accent)]"
+          className="w-full min-w-[640px] text-[var(--accent)]"
         >
           <rect
             x={padding}

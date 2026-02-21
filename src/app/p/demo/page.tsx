@@ -34,6 +34,7 @@ type Flight = {
 const demoDir = path.join(process.cwd(), "public", "demo-data");
 type AirportLat = { icao: string; lat: number };
 const DAY_MS = 24 * 60 * 60 * 1000;
+const DEMO_CUMULATIVE_BASELINE_HOURS = 10250;
 
 const sum = (arr: Flight[], key: keyof Flight) =>
   arr.reduce((a, r) => a + (Number(r[key]) || 0), 0);
@@ -425,7 +426,7 @@ export default async function DemoProfilePage() {
     }, new Map<string, number>()),
   ).sort(([a], [b]) => a.localeCompare(b));
   const cumulativeChartData = (() => {
-    let running = 0;
+    let running = DEMO_CUMULATIVE_BASELINE_HOURS;
     return dailyTotals.map(([date, total]) => {
       const totalNum = Number(total) || 0;
       running += totalNum;
@@ -445,7 +446,11 @@ export default async function DemoProfilePage() {
         statsOverride={stats}
         heatmapOverride={heatmap}
         routesOverride={routes}
-        cumulativeOverride={{ data: cumulativeChartData, totalHours: stats.totals.total }}
+        cumulativeOverride={{
+          data: cumulativeChartData,
+          totalHours: DEMO_CUMULATIVE_BASELINE_HOURS + stats.totals.total,
+          yAxisMin: DEMO_CUMULATIVE_BASELINE_HOURS,
+        }}
       />
     </div>
   );
