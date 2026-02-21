@@ -33,11 +33,35 @@ type Flight = {
 
 const demoDir = path.join(process.cwd(), "public", "demo-data");
 type AirportLat = { icao: string; lat: number };
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 const sum = (arr: Flight[], key: keyof Flight) =>
   arr.reduce((a, r) => a + (Number(r[key]) || 0), 0);
 
 const toDateUtc = (dateStr: string) => new Date(`${dateStr}T00:00:00Z`);
+const toUtcDay = (date: Date) => Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+
+function shiftFlightsToRecent(flights: Flight[]): Flight[] {
+  if (flights.length === 0) return flights;
+
+  const latestDay = flights.reduce((max, flight) => {
+    const day = toUtcDay(toDateUtc(flight.flt_date));
+    return day > max ? day : max;
+  }, Number.NEGATIVE_INFINITY);
+
+  const today = new Date();
+  const targetLatestDay = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - 1); // yesterday
+  const dayShift = Math.round((targetLatestDay - latestDay) / DAY_MS);
+
+  return flights.map((flight) => {
+    const shiftedDay = toUtcDay(toDateUtc(flight.flt_date)) + dayShift * DAY_MS;
+    const shiftedDate = new Date(shiftedDay).toISOString().slice(0, 10);
+    return {
+      ...flight,
+      flt_date: shiftedDate,
+    };
+  });
+}
 
 function aggregate(flights: Flight[]) {
   // Heatmap
@@ -379,7 +403,8 @@ export const metadata = {
 
 export default async function DemoProfilePage() {
   const flightsRaw = await fs.readFile(path.join(demoDir, "flights.json"), "utf-8");
-  const flights = JSON.parse(flightsRaw) as Flight[];
+  const sourceFlights = JSON.parse(flightsRaw) as Flight[];
+  const flights = shiftFlightsToRecent(sourceFlights);
 
   const today = new Date();
   // Include current month plus previous 5 full months
