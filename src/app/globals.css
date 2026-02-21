@@ -3,39 +3,131 @@
 @import "ol/ol.css";
 
 :root {
-  color-scheme: light;
-  --bg: #eaf1f8;
-  --panel: #ffffff;
-  --panel-muted: #e6eef7;
-  --text: #0b1f33;
-  --text-strong: #0f2f4b;
-  --muted: #35506c;
-  --muted-2: #4b647c;
-  --border: #d4e0ec;
-  --accent: #1f4b71;
+  color-scheme: light dark;
+  --light-bg: #e9eef9;
+  --light-panel: #f8fbff;
+  --light-panel-muted: #dce6f5;
+  --light-text: #050f1f;
+  --light-text-strong: #000814;
+  --light-muted: #334155;
+  --light-muted-2: #475569;
+  --light-border: #c4d0e6;
+  --light-accent: #1d4ed8;
+  --light-accent-text: #f8fafc;
+  --light-secondary: #0f172a;
+  --light-secondary-text: #f8fafc;
+  --light-accent-soft: #dbeafe;
+  --light-accent-ring: #8fb2ff;
+
+  --dark-bg: #020611;
+  --dark-panel: #081224;
+  --dark-panel-muted: #10203a;
+  --dark-text: #dbeafe;
+  --dark-text-strong: #eff6ff;
+  --dark-muted: #9fb2c9;
+  --dark-muted-2: #89a0bb;
+  --dark-border: #1b2a44;
+  --dark-accent: #60a5fa;
+  --dark-accent-text: #020617;
+  --dark-secondary: #0f172a;
+  --dark-secondary-text: #e2e8f0;
+  --dark-accent-soft: #172554;
+  --dark-accent-ring: #3b82f6;
+
+  --bg: var(--light-bg);
+  --panel: var(--light-panel);
+  --panel-muted: var(--light-panel-muted);
+  --text: var(--light-text);
+  --text-strong: var(--light-text-strong);
+  --muted: var(--light-muted);
+  --muted-2: var(--light-muted-2);
+  --border: var(--light-border);
+  --accent: var(--light-accent);
+  --accent-text: var(--light-accent-text);
+  --secondary: var(--light-secondary);
+  --secondary-text: var(--light-secondary-text);
+  --accent-soft: var(--light-accent-soft);
+  --accent-ring: var(--light-accent-ring);
 }
 
-[data-theme="dark"],
-.dark {
-  color-scheme: dark;
-  --bg: #0b1626;
-  --panel: #0f1b2e;
-  --panel-muted: #162338;
-  --text: #dbe7ff;
-  --text-strong: #e8f0ff;
-  --muted: #a8bedd;
-  --muted-2: #97b0d4;
-  --border: #1c2d44;
-  --accent: #3a7bd5;
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: var(--dark-bg);
+    --panel: var(--dark-panel);
+    --panel-muted: var(--dark-panel-muted);
+    --text: var(--dark-text);
+    --text-strong: var(--dark-text-strong);
+    --muted: var(--dark-muted);
+    --muted-2: var(--dark-muted-2);
+    --border: var(--dark-border);
+    --accent: var(--dark-accent);
+    --accent-text: var(--dark-accent-text);
+    --secondary: var(--dark-secondary);
+    --secondary-text: var(--dark-secondary-text);
+    --accent-soft: var(--dark-accent-soft);
+    --accent-ring: var(--dark-accent-ring);
+  }
+}
+
+[data-theme-scope="true"] {
+  --bg: var(--light-bg);
+  --panel: var(--light-panel);
+  --panel-muted: var(--light-panel-muted);
+  --text: var(--light-text);
+  --text-strong: var(--light-text-strong);
+  --muted: var(--light-muted);
+  --muted-2: var(--light-muted-2);
+  --border: var(--light-border);
+  --accent: var(--light-accent);
+  --accent-text: var(--light-accent-text);
+  --secondary: var(--light-secondary);
+  --secondary-text: var(--light-secondary-text);
+  --accent-soft: var(--light-accent-soft);
+  --accent-ring: var(--light-accent-ring);
+}
+
+[data-theme-scope="true"][data-theme-mode="dark"] {
+  --bg: var(--dark-bg);
+  --panel: var(--dark-panel);
+  --panel-muted: var(--dark-panel-muted);
+  --text: var(--dark-text);
+  --text-strong: var(--dark-text-strong);
+  --muted: var(--dark-muted);
+  --muted-2: var(--dark-muted-2);
+  --border: var(--dark-border);
+  --accent: var(--dark-accent);
+  --accent-text: var(--dark-accent-text);
+  --secondary: var(--dark-secondary);
+  --secondary-text: var(--dark-secondary-text);
+  --accent-soft: var(--dark-accent-soft);
+  --accent-ring: var(--dark-accent-ring);
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-theme-scope="true"][data-theme-mode="system"],
+  [data-theme-scope="true"][data-theme-mode="custom"] {
+    --bg: var(--dark-bg);
+    --panel: var(--dark-panel);
+    --panel-muted: var(--dark-panel-muted);
+    --text: var(--dark-text);
+    --text-strong: var(--dark-text-strong);
+    --muted: var(--dark-muted);
+    --muted-2: var(--dark-muted-2);
+    --border: var(--dark-border);
+    --accent: var(--dark-accent);
+    --accent-text: var(--dark-accent-text);
+    --secondary: var(--dark-secondary);
+    --secondary-text: var(--dark-secondary-text);
+    --accent-soft: var(--dark-accent-soft);
+    --accent-ring: var(--dark-accent-ring);
+  }
 }
 
 @theme inline {
   --color-background: var(--bg);
   --color-foreground: var(--text);
-  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono",
-    "Courier New", monospace;
+  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 body {
@@ -49,27 +141,7 @@ body {
   max-width: none !important;
 }
 
-/* helper utility-like classes for custom palette */
-.bg-surface { background-color: var(--panel); }
-.bg-surface-muted { background-color: var(--panel-muted); }
-.text-body { color: var(--text); }
-.text-muted { color: var(--muted); }
-.text-muted-2 { color: var(--muted-2); }
-.border-surface { border-color: var(--border); }
-.btn-primary { background-color: var(--accent); color: #ffffff; }
-
-/* Map legacy utility colors to theme variables for consistency */
-.bg-\[\#eaf1f8\] { background-color: var(--bg) !important; }
-.bg-white { background-color: var(--panel) !important; }
-.bg-\[\#f3f7fc\] { background-color: var(--panel-muted) !important; }
-.bg-\[\#e6eef7\] { background-color: var(--panel-muted) !important; }
-.bg-\[\#d4e0ec\] { background-color: var(--border) !important; }
-.bg-\[\#1f4b71\] { background-color: var(--accent) !important; }
-.text-\[\#0b1f33\] { color: var(--text) !important; }
-.text-\[\#0f2f4b\] { color: var(--text-strong) !important; }
-.text-\[\#35506c\] { color: var(--muted) !important; }
-.text-\[\#4b647c\] { color: var(--muted-2) !important; }
-.text-\[\#5d7995\] { color: var(--muted-2) !important; }
-.text-\[\#9cb6cf\] { color: var(--muted-2) !important; }
-.border-\[\#d4e0ec\] { border-color: var(--border) !important; }
-.border-\[\#9cb6cf\] { border-color: var(--muted-2) !important; }
+::selection {
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+  color: var(--text-strong);
+}

@@ -25,7 +25,7 @@ export default function PricingPage() {
         <div className="flex flex-wrap gap-3">
           <Link
             href="/sign-up"
-            className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+            className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-text)] transition hover:opacity-90"
           >
             Create your page
           </Link>

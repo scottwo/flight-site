@@ -1,0 +1,3 @@
+-- No-op migration.
+-- The enum change for FORE_FLIGHT_CSV was already captured in
+-- 20260130221130_foreflight_provider/migration.sql.

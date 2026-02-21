@@ -25,6 +25,13 @@ enum ImportStatus {
   FAILED
 }
 
+enum ThemeMode {
+  SYSTEM
+  LIGHT
+  DARK
+  CUSTOM
+}
+
 model User {
   id          String   @id @default(uuid())
   clerkUserId String   @unique
@@ -41,13 +48,17 @@ model User {
 }
 
 model Profile {
-  userId      String   @id
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  handle      String   @unique @db.Citext
-  displayName String
-  headline    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  userId           String    @id
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  handle           String    @unique @db.Citext
+  displayName      String
+  headline         String?
+  themeMode        ThemeMode @default(SYSTEM)
+  themePrimary     String?
+  themeSecondary   String?
+  themeGuardrails  Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 }
 
 model ImportJob {

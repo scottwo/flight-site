@@ -7,7 +7,10 @@ import ForeFlightCsvUploadCard from "@/components/ForeFlightCsvUploadCard";
 import HandleEditor from "@/components/HandleEditor";
 import HeadlineEditor from "@/components/HeadlineEditor";
 import LogTenTsvUploadCard from "@/components/LogTenTsvUploadCard";
+import ThemeScope from "@/components/ThemeScope";
+import ThemeSettingsEditor from "@/components/ThemeSettingsEditor";
 import { prisma } from "@/lib/prisma";
+import { toThemeSettings } from "@/lib/theme";
 
 export default async function SettingsPage() {
   const { userId } = await auth();
@@ -19,15 +22,30 @@ export default async function SettingsPage() {
     select: {
       id: true,
       profile: {
-        select: { handle: true, headline: true },
+        select: {
+          handle: true,
+          headline: true,
+          themeMode: true,
+          themePrimary: true,
+          themeSecondary: true,
+          themeGuardrails: true,
+        },
       },
     },
   });
 
   const profile = dbUser?.profile ?? null;
+  const themeSettings = profile
+    ? toThemeSettings({
+        themeMode: profile.themeMode,
+        themePrimary: profile.themePrimary,
+        themeSecondary: profile.themeSecondary,
+        themeGuardrails: profile.themeGuardrails,
+      })
+    : undefined;
 
   return (
-    <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+    <ThemeScope settings={themeSettings} className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <div className="mx-auto flex max-w-4xl flex-col gap-8 px-6 py-12">
         <LogTenTsvUploadCard />
         <ForeFlightCsvUploadCard />
@@ -56,7 +74,21 @@ export default async function SettingsPage() {
 
         <section className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-[var(--text)]">Theme</h2>
-          <p className="text-sm text-[var(--muted)]">Preset colors and typography (coming soon).</p>
+          <p className="text-sm text-[var(--muted)]">
+            Set your style mode and custom primary/secondary colors for your dashboard and public page.
+          </p>
+          {profile ? (
+            <ThemeSettingsEditor
+              initialMode={profile.themeMode}
+              initialPrimary={profile.themePrimary}
+              initialSecondary={profile.themeSecondary}
+              initialGuardrails={profile.themeGuardrails}
+            />
+          ) : (
+            <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--panel-muted)] p-4 text-sm text-[var(--muted)]">
+              Loading theme settings...
+            </div>
+          )}
         </section>
 
         <section className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
@@ -87,6 +119,6 @@ export default async function SettingsPage() {
           Back to dashboard
         </Link>
       </div>
-    </main>
+    </ThemeScope>
   );
 }

@@ -93,7 +93,7 @@ export default function HandleEditor({ initialHandle }: { initialHandle: string 
           <input
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            className="w-full rounded-xl border border-[var(--border)] bg-[var(--panel)] px-3 py-2 text-[var(--text)] outline-none focus:border-[var(--accent)]"
+            className="w-full rounded-xl border border-[var(--border)] bg-[var(--panel)] px-3 py-2 text-[var(--text)] outline-none focus:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent-ring)]"
           />
           <p className="text-xs text-[var(--muted)]">Your page will be /p/{normalized || initialHandle}</p>
         </div>
@@ -103,7 +103,7 @@ export default function HandleEditor({ initialHandle }: { initialHandle: string 
         type="button"
         onClick={save}
         disabled={!canSave}
-        className="rounded-full bg-[var(--accent)] px-4 py-2 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+        className="rounded-full bg-[var(--accent)] px-4 py-2 text-xs font-semibold text-[var(--accent-text)] transition hover:opacity-90 disabled:opacity-50"
       >
         {saving ? "Saving..." : "Save handle"}
       </button>

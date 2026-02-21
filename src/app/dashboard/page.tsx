@@ -4,7 +4,9 @@ import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import ThemeScope from "@/components/ThemeScope";
 import { prisma } from "@/lib/prisma";
+import { toThemeSettings } from "@/lib/theme";
 
 export default async function DashboardPage() {
   const { userId } = await auth();
@@ -19,9 +21,17 @@ export default async function DashboardPage() {
 
   const displayName = user?.profile?.displayName ?? "Pilot";
   const handle = user?.profile?.handle;
+  const themeSettings = user?.profile
+    ? toThemeSettings({
+        themeMode: user.profile.themeMode,
+        themePrimary: user.profile.themePrimary,
+        themeSecondary: user.profile.themeSecondary,
+        themeGuardrails: user.profile.themeGuardrails,
+      })
+    : undefined;
 
   return (
-    <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+    <ThemeScope settings={themeSettings} className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <div className="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-12">
         <header className="space-y-3">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--muted-2)]">Dashboard</p>
@@ -47,7 +57,7 @@ export default async function DashboardPage() {
             <div className="mt-4 flex flex-wrap gap-3">
               <Link
                 href="/dashboard/settings"
-                className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+                className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-text)] transition hover:brightness-95"
               >
                 Settings
               </Link>
@@ -76,6 +86,6 @@ export default async function DashboardPage() {
           </div>
         </section>
       </div>
-    </main>
+    </ThemeScope>
   );
 }
