@@ -62,16 +62,16 @@ export default async function DashboardPage() {
                 Settings
               </Link>
               <Link
+                href="/dashboard/import"
+                className="rounded-full border border-[var(--border)] bg-[var(--panel)] px-4 py-2 text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--panel-muted)]"
+              >
+                Import data
+              </Link>
+              <Link
                 href="/p/me"
                 className="rounded-full border border-[var(--border)] bg-[var(--panel)] px-4 py-2 text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--panel-muted)]"
               >
                 View my page
-              </Link>
-              <Link
-                href="/p/demo"
-                className="rounded-full border border-[var(--border)] bg-[var(--panel)] px-4 py-2 text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--panel-muted)]"
-              >
-                View demo
               </Link>
             </div>
           </div>
@@ -80,7 +80,7 @@ export default async function DashboardPage() {
             <h2 className="text-lg font-semibold text-[var(--text)]">Next steps</h2>
             <ul className="mt-3 space-y-2 text-sm text-[var(--muted)]">
               <li>• Confirm your handle and display name in Settings.</li>
-              <li>• Import your flight stats (coming soon).</li>
+              <li>• Upload and import your logbook in Import data.</li>
               <li>• Share your public link with recruiters or crew.</li>
             </ul>
           </div>
