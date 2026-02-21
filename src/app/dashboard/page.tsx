@@ -82,7 +82,7 @@ export default async function DashboardPage() {
               <li>• Confirm your handle and display name in Settings.</li>
               <li>• Upload and import your logbook in Import data.</li>
               <li>• Upload your resume. (Coming Soon!)</li>
-              <li>• Share your public link.</li>
+              <li>• Share your public link!</li>
             </ul>
           </div>
         </section>
