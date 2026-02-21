@@ -141,7 +141,8 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
   const now = new Date();
   const startDayAgg = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 23, 1));
-  const heatmapWindowStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 11, 1));
+  const heatmapWindowStart = new Date(now);
+  heatmapWindowStart.setUTCDate(heatmapWindowStart.getUTCDate() - (26 * 7 - 1));
   const currency90Start = new Date(now);
   currency90Start.setUTCDate(currency90Start.getUTCDate() - 90);
   const currency180Start = new Date(now);
@@ -204,6 +205,17 @@ export default async function PublicProfilePage({ params }: PageProps) {
       total,
       cumulative: running,
     });
+  }
+  if (cumulativeChartData.length > 0) {
+    const latestDate = new Date(`${cumulativeChartData[cumulativeChartData.length - 1].date}T00:00:00Z`);
+    const todayUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    if (latestDate < todayUtc) {
+      cumulativeChartData.push({
+        date: todayUtc.toISOString().slice(0, 10),
+        total: 0,
+        cumulative: running,
+      });
+    }
   }
 
   const parsedFunFacts = stats?.funFacts ? parseFunFacts(stats.funFacts) : [];

@@ -19,9 +19,12 @@ type DayCell = {
   value: number;
 };
 
+const DAY_MS = 86_400_000;
+const WEEKS = 26;
+
 function buildRange(start: Date, end: Date) {
   const days: Date[] = [];
-  let current = new Date(start);
+  const current = new Date(start);
   while (current <= end) {
     days.push(new Date(current));
     current.setUTCDate(current.getUTCDate() + 1);
@@ -29,17 +32,8 @@ function buildRange(start: Date, end: Date) {
   return days;
 }
 
-function getStartOfWeek(date: Date) {
-  const d = new Date(date);
-  const day = d.getUTCDay();
-  d.setUTCDate(d.getUTCDate() - day);
-  return d;
-}
-
 export function Heatmap({ data, title = "Recent flying" }: Props) {
   const { weeks, maxValue } = useMemo(() => {
-    if (!data.length) return { weeks: [] as DayCell[][], maxValue: 0 };
-
     const parsed = data.map((d) => {
       const date = new Date(`${d.day}T00:00:00Z`);
       return {
@@ -49,11 +43,10 @@ export function Heatmap({ data, title = "Recent flying" }: Props) {
       };
     });
 
-    const earliest = parsed.reduce((min, curr) => (curr.date < min ? curr.date : min), parsed[0].date);
-    const latest = parsed.reduce((max, curr) => (curr.date > max ? curr.date : max), parsed[0].date);
-
-    const start = getStartOfWeek(earliest);
-    const range = buildRange(start, latest);
+    const today = new Date();
+    const end = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+    const start = new Date(end.getTime() - (WEEKS * 7 - 1) * DAY_MS);
+    const range = buildRange(start, end);
     const valueByIso = new Map(parsed.map((p) => [p.iso, p.value]));
 
     const cells: DayCell[] = range.map((date) => {
@@ -70,7 +63,7 @@ export function Heatmap({ data, title = "Recent flying" }: Props) {
       weeksBuilt.push(cells.slice(i, i + 7));
     }
 
-    const maxValue = parsed.reduce((m, p) => (p.value > m ? p.value : m), 0);
+    const maxValue = cells.reduce((m, p) => (p.value > m ? p.value : m), 0);
     return { weeks: weeksBuilt, maxValue };
   }, [data]);
 
@@ -101,30 +94,26 @@ export function Heatmap({ data, title = "Recent flying" }: Props) {
           <span className="rounded-md border border-[var(--border)] bg-[var(--panel-muted)] px-2 py-1">More</span>
         </div>
       </div>
-      {weeks.length === 0 ? (
-        <p className="text-sm text-[var(--muted)]">No flying data yet.</p>
-      ) : (
-        <div className="overflow-x-auto">
-          <div className="flex gap-1">
-            {weeks.map((week, idx) => (
-              <div key={idx} className="flex flex-col gap-1">
-                {week.map((day) => {
-                  const level = levels(day.value);
-                  const opacity = level === 0 ? 0.1 : 0.2 + level * 0.2;
-                  return (
-                    <div
-                      key={day.iso}
-                      className="h-4 w-4 rounded-sm border border-[var(--border)] bg-[var(--accent)]"
-                      style={{ opacity }}
-                      title={`${day.iso} – ${day.value.toFixed(1)} hrs`}
-                    />
-                  );
-                })}
-              </div>
-            ))}
-          </div>
+      <div className="overflow-x-auto">
+        <div className="flex gap-1">
+          {weeks.map((week, idx) => (
+            <div key={idx} className="flex flex-col gap-1">
+              {week.map((day) => {
+                const level = levels(day.value);
+                const opacity = level === 0 ? 0.1 : 0.2 + level * 0.2;
+                return (
+                  <div
+                    key={day.iso}
+                    className="h-4 w-4 rounded-sm border border-[var(--border)] bg-[var(--accent)]"
+                    style={{ opacity }}
+                    title={`${day.iso} – ${day.value.toFixed(1)} hrs`}
+                  />
+                );
+              })}
+            </div>
+          ))}
         </div>
-      )}
+      </div>
     </section>
   );
 }
