@@ -110,6 +110,25 @@ export default async function ImportPage() {
           <ForeFlightCsvUploadCard />
         </section>
 
+        <section className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-[var(--text)]">MyFlightbook importer</h2>
+          <ImportGuideAccordion title="How to import from MyFlightbook (stub)">
+            <p>Replace this with your final MyFlightbook import guide.</p>
+            <ul className="mt-2 space-y-1">
+              <li>1. Document where users export data from MyFlightbook.</li>
+              <li>2. Explain expected file type and required fields.</li>
+              <li>3. Note any differences versus LogTen/ForeFlight mappings.</li>
+              <li>4. Add troubleshooting and common import errors.</li>
+            </ul>
+          </ImportGuideAccordion>
+          <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--panel-muted)] p-4">
+            <p className="text-sm font-semibold text-[var(--text)]">Coming soon!</p>
+            <p className="mt-1 text-sm text-[var(--muted)]">
+              MyFlightbook import support is planned but not available yet.
+            </p>
+          </div>
+        </section>
+
         <div className="flex gap-3">
           <Link
             href="/dashboard/settings"
