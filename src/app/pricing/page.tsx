@@ -46,6 +46,10 @@ export default function PricingPage() {
             Terms
           </Link>
           <span className="text-[var(--muted-2)]">•</span>
+          <Link href="/contact" className="hover:text-[var(--text-strong)]">
+            Contact
+          </Link>
+          <span className="text-[var(--muted-2)]">•</span>
           <Link href="/" className="hover:text-[var(--text-strong)]">
             Home
           </Link>

@@ -82,6 +82,12 @@ export default async function RootLayout({
                     Dashboard
                   </Link>
                 </SignedIn>
+                <Link
+                  href="/contact"
+                  className="rounded-full px-4 py-2 transition hover:bg-[var(--panel-muted)] hover:text-[var(--text-strong)]"
+                >
+                  Contact
+                </Link>
               </nav>
 
               <div className="flex items-center gap-2 sm:gap-3">
@@ -111,6 +117,9 @@ export default async function RootLayout({
                     </Link>
                     <Link href="/p/demo" className="block rounded-xl px-3 py-2 text-sm font-semibold hover:bg-[var(--panel-muted)]">
                       Demo
+                    </Link>
+                    <Link href="/contact" className="block rounded-xl px-3 py-2 text-sm font-semibold hover:bg-[var(--panel-muted)]">
+                      Contact
                     </Link>
                     <SignedOut>
                       <Link href="/pricing" className="block rounded-xl px-3 py-2 text-sm font-semibold hover:bg-[var(--panel-muted)]">
@@ -155,6 +164,10 @@ export default async function RootLayout({
               <span className="text-[var(--muted-2)]">•</span>
               <Link href="/terms" className="hover:text-[var(--text-strong)]">
                 Terms
+              </Link>
+              <span className="text-[var(--muted-2)]">•</span>
+              <Link href="/contact" className="hover:text-[var(--text-strong)]">
+                Contact
               </Link>
             </div>
           </footer>
