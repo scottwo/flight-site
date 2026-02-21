@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type Status =
   | { state: "idle" }
@@ -14,6 +15,8 @@ function normalizeLocal(input: string) {
 }
 
 export default function HandleEditor({ initialHandle }: { initialHandle: string }) {
+  const router = useRouter();
+  const [savedHandle, setSavedHandle] = useState(initialHandle);
   const [value, setValue] = useState(initialHandle);
   const [status, setStatus] = useState<Status>({ state: "idle" });
   const [saving, setSaving] = useState(false);
@@ -21,7 +24,7 @@ export default function HandleEditor({ initialHandle }: { initialHandle: string 
 
   useEffect(() => {
     let abort = false;
-    if (!normalized || normalized === initialHandle) {
+    if (!normalized || normalized === savedHandle) {
       setStatus({ state: "idle" });
       return;
     }
@@ -44,9 +47,9 @@ export default function HandleEditor({ initialHandle }: { initialHandle: string 
       abort = true;
       clearTimeout(t);
     };
-  }, [normalized, initialHandle]);
+  }, [normalized, savedHandle]);
 
-  const canSave = normalized !== initialHandle && status.state === "available" && !saving;
+  const canSave = normalized !== savedHandle && status.state === "available" && !saving;
 
   const save = async () => {
     if (!canSave) return;
@@ -62,7 +65,10 @@ export default function HandleEditor({ initialHandle }: { initialHandle: string 
         setStatus({ state: res.status === 409 ? "taken" : "invalid", message: data.error || "Save failed" });
         return;
       }
+      setSavedHandle(normalized);
+      setValue(normalized);
       setStatus({ state: "idle" });
+      router.refresh();
     } catch {
       setStatus({ state: "invalid", message: "Save failed" });
     } finally {
@@ -81,7 +87,7 @@ export default function HandleEditor({ initialHandle }: { initialHandle: string 
       case "invalid":
         return <span className="text-xs font-semibold text-red-500">✕ {status.message}</span>;
       default:
-        return <span className="text-xs text-[var(--muted-2)]">Your page: /p/{normalized || initialHandle}</span>;
+        return <span className="text-xs text-[var(--muted-2)]">Your page: /p/{normalized || savedHandle}</span>;
     }
   })();
 
@@ -95,7 +101,7 @@ export default function HandleEditor({ initialHandle }: { initialHandle: string 
             onChange={(e) => setValue(e.target.value)}
             className="w-full rounded-xl border border-[var(--border)] bg-[var(--panel)] px-3 py-2 text-[var(--text)] outline-none focus:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent-ring)]"
           />
-          <p className="text-xs text-[var(--muted)]">Your page will be /p/{normalized || initialHandle}</p>
+          <p className="text-xs text-[var(--muted)]">Your page will be /p/{normalized || savedHandle}</p>
         </div>
         <div className="min-w-[96px] text-right">{statusDisplay}</div>
       </div>
