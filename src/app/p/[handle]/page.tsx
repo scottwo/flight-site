@@ -44,6 +44,12 @@ function buildFallbackFunFacts(
   routes: { fromIcao: string; toIcao: string; flightsCount: number; totalTime: number; lastFlownAt: Date | null }[],
   dayAgg: { day: Date; flightsCount: number; totalTime: number }[],
   flights: { flightDate: Date }[],
+  topTail:
+    | {
+        tailNumber: string;
+        flightsCount: number;
+      }
+    | null,
 ): FunFact[] {
   const facts: FunFact[] = [];
 
@@ -119,6 +125,16 @@ function buildFallbackFunFacts(
     });
   }
 
+  if (topTail) {
+    facts.push({
+      id: "most_flown_tail",
+      label: "Most flown tail",
+      value: topTail.tailNumber,
+      detail: `${topTail.flightsCount} flights`,
+      score: 8,
+    });
+  }
+
   return facts.slice(0, 6);
 }
 
@@ -148,7 +164,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
   const currency180Start = new Date(now);
   currency180Start.setUTCDate(currency180Start.getUTCDate() - 180);
 
-  const [stats, dayAgg, routes, currencyFlights, recentFlights, mapData] = await Promise.all([
+  const [stats, dayAgg, routes, currencyFlights, recentFlights, tailNumbers, mapData] = await Promise.all([
     prisma.profileStats.findUnique({
       where: { userId: profile.user.id },
     }),
@@ -184,6 +200,13 @@ export default async function PublicProfilePage({ params }: PageProps) {
       take: 5,
       select: { flightDate: true, fromIcao: true, toIcao: true, totalTime: true, night: true, ifr: true },
     }),
+    prisma.flight.findMany({
+      where: {
+        userId: profile.user.id,
+        tailNumber: { not: null },
+      },
+      select: { tailNumber: true },
+    }),
     getUserMapData(profile.user.id),
   ]);
 
@@ -218,6 +241,21 @@ export default async function PublicProfilePage({ params }: PageProps) {
     }
   }
 
+  const tailCounts = new Map<string, number>();
+  for (const row of tailNumbers) {
+    const t = row.tailNumber?.trim();
+    if (!t) continue;
+    tailCounts.set(t, (tailCounts.get(t) ?? 0) + 1);
+  }
+  const topTail = Array.from(tailCounts.entries())
+    .sort((a, b) => b[1] - a[1])[0];
+  const topTailFact = topTail
+    ? {
+        tailNumber: topTail[0],
+        flightsCount: topTail[1],
+      }
+    : null;
+
   const parsedFunFacts = stats?.funFacts ? parseFunFacts(stats.funFacts) : [];
   const fallbackFacts = parsedFunFacts.length
     ? parsedFunFacts
@@ -225,6 +263,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
         routes,
         dayAgg.map((d) => ({ day: d.day, flightsCount: d.flightsCount, totalTime: d.totalTime })),
         recentFlights,
+        topTailFact,
       );
 
   const isOwner = userId && profile.user.clerkUserId === userId;

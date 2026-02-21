@@ -7,6 +7,7 @@ type FunFact = {
 };
 
 const PRIORITY = [
+  "most_flown_tail",
   "furthest_leg",
   "most_frequent_route",
   "biggest_day_hours",

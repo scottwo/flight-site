@@ -32,6 +32,8 @@ const parseDate = (value?: string | null) => {
   return Number.isNaN(d.getTime()) ? null : d;
 };
 
+// ForeFlight route strings may include both ICAO and FAA identifiers.
+// We normalize both forms for route-leg reconstruction and missing-code reporting.
 function isNonNull<T>(v: T | null | undefined): v is T {
   return v !== null && v !== undefined;
 }
@@ -135,6 +137,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "No upload ready to import" }, { status: 400 });
   }
 
+  // Mark import as running before parsing to prevent duplicate workers touching one job.
   await prisma.importJob.update({
     where: { id: job.id },
     data: { status: "IMPORTING", error: null, startedAt: new Date() },
@@ -148,6 +151,8 @@ export async function POST(req: Request) {
     if (!blobRes.ok) throw new Error(`Blob fetch failed: ${blobRes.status}`);
     const text = await blobRes.text();
 
+    // ForeFlight exports can include additional sections. We anchor on the flight
+    // header row and parse from there so non-flight rows are ignored.
     const lines = text.replace(/\r\n/g, "\n").split("\n");
     const flightsHeaderIdx = lines.findIndex((l) => l.startsWith("Date,AircraftID,From,To,Route"));
     if (flightsHeaderIdx < 0) throw new Error("ForeFlight: Flights header row not found");
@@ -161,6 +166,7 @@ export async function POST(req: Request) {
       trim: true,
     }) as Record<string, string>[];
 
+    // Normalize provider-specific columns into our canonical FlightCreateManyInput shape.
     const flightsToCreate = records
       .map((row) => {
         const flightDate = parseDate(row["Date"]);
@@ -200,6 +206,7 @@ export async function POST(req: Request) {
       })
       .filter(isNonNull);
 
+    // Airport lookup is read-only: unresolved codes become warnings instead of auto-creates.
     const endpointCodes = new Set<string>();
     const waypointCandidates = new Set<string>();
     flightsToCreate.forEach((f) => {
@@ -236,6 +243,7 @@ export async function POST(req: Request) {
       };
     });
 
+    // Current import strategy replaces user flights for deterministic aggregate rebuilds.
     await prisma.flight.deleteMany({ where: { userId: internalUser.id } });
     if (flightsWithIds.length) {
       await prisma.flight.createMany({ data: flightsWithIds });
@@ -264,6 +272,7 @@ export async function POST(req: Request) {
     const cutoff90 = new Date(now);
     cutoff90.setDate(cutoff90.getDate() - 90);
 
+    // Recompute ProfileStats from imported rows for fast read paths.
     const totals = flights.reduce(
       (acc, f) => {
         acc.totalTime += f.totalTime ?? 0;
@@ -330,6 +339,7 @@ export async function POST(req: Request) {
       },
     });
 
+    // Rebuild per-day aggregates used by heatmap/cumulative views.
     await prisma.flightDayAgg.deleteMany({ where: { userId: internalUser.id } });
     const dayMap = new Map<
       string,
@@ -387,6 +397,7 @@ export async function POST(req: Request) {
       });
     }
 
+    // Rebuild route aggregates, expanding multi-stop routes into per-leg stats.
     await prisma.routeAgg.deleteMany({ where: { userId: internalUser.id } });
     const routeMap = new Map<
       string,
@@ -436,6 +447,7 @@ export async function POST(req: Request) {
       });
     }
 
+    // Persist warning payload so import UI can explain skipped rows/missing airports.
     await prisma.importJob.update({
       where: { id: job.id },
       data: {
@@ -453,6 +465,7 @@ export async function POST(req: Request) {
       },
     });
 
+    // Cleanup uploaded artifact after successful import to limit blob retention.
     if (job.blobPathname || job.blobUrl) {
       try {
         await del(job.blobPathname ?? job.blobUrl);

@@ -31,6 +31,8 @@ const parseDate = (value?: string | null) => {
   return Number.isNaN(d.getTime()) ? null : d;
 };
 
+// LogTen route/remarks strings can contain a mixture of ICAO and FAA identifiers.
+// We mine those to recover individual route legs for map/route aggregates.
 const ICAO_RE = /\b[A-Z]{4}\b/g;
 const FAA_LID_RE = /\b[A-Z]{1,2}\d{1,3}\b/g;
 
@@ -70,7 +72,8 @@ function buildLegsForFlight(
   const viaFallback = extractAirportCodes(f.remarks);
   const viaCandidates = viaRaw.length ? viaRaw : viaFallback;
 
-  // Filter to known airports if provided; collect missing codes.
+  // Filter to known airports if provided; collect missing codes so the UI can
+  // surface why some legs are not represented on the map.
   const filterKnown = (code: string) => {
     if (!knownAirportCodes) return true;
     const ok = knownAirportCodes.has(code);
@@ -145,6 +148,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "No upload ready to import" }, { status: 400 });
   }
 
+  // Move job to IMPORTING as early as possible to avoid duplicate concurrent runs.
   await prisma.importJob.update({
     where: { id: job.id },
     data: { status: "IMPORTING", error: null },
@@ -155,9 +159,9 @@ export async function POST(req: Request) {
     if (!tsvRes.ok) throw new Error(`Blob fetch failed: ${tsvRes.status}`);
     const text = await tsvRes.text();
 
-    // LogTen TSV exports are not strict TSV rows: they can include interleaved metadata rows and
-    // multi-line remarks. MVP approach: parse line-by-line and only keep rows that begin with a
-    // flight date (YYYY-MM-DD). Then extract columns by header index.
+    // LogTen TSV exports are not strict row sets: metadata and freeform text can
+    // be interleaved. We keep only rows that begin with a date token and then
+    // index fields by header name.
     const lines = text.replace(/\r\n/g, "\n").split("\n");
     const headerLine = lines.find((l) => l.trim().length > 0);
     if (!headerLine) throw new Error("Empty TSV");
@@ -244,7 +248,7 @@ export async function POST(req: Request) {
           aircraftMake: get(fields, "aircraftType_make") || null,
           aircraftModel: get(fields, "aircraftType_model") || null,
           aircraftType: get(fields, "aircraftType_type") || null,
-          tailNumber: get(fields, "aircraft_secondaryID") || null,
+          tailNumber: get(fields, "aircraft_aircraftID") || null,
           fromIcao,
           toIcao,
         };
@@ -255,11 +259,12 @@ export async function POST(req: Request) {
     const knownAirportCodes = new Set<string>();
     const missingAirportCodes = new Set<string>();
 
-    // MVP: Replace flights.
-    // (We can wrap this in a transaction later once interactive tx typing is stable.)
+    // Current strategy is full replace on each import for deterministic aggregates.
+    // This keeps import behavior simple until we add provider-level dedupe/upsert.
     await prisma.flight.deleteMany({ where: { userId: internalUser.id } });
 
-    // Scan route/remarks for ICAO-like tokens (for map legs) but do not create airports here.
+    // Scan route/remarks for airport-like tokens to support multi-leg reconstruction.
+    // Airports are lookup-only: unknown codes are tracked, not inserted.
     const extractedCandidates = new Set<string>();
     flightsToCreate.forEach((f) => {
       const candidates: string[] = [];
@@ -333,6 +338,7 @@ export async function POST(req: Request) {
     const cutoff90 = new Date(now);
     cutoff90.setDate(cutoff90.getDate() - 90);
 
+    // ProfileStats are persisted denormalized totals for fast public page loads.
     const totals = flights.reduce(
       (acc, f) => {
         acc.totalTime += f.totalTime ?? 0;
@@ -399,6 +405,7 @@ export async function POST(req: Request) {
       },
     });
 
+    // Rebuild day aggregates (heatmap + cumulative chart source).
     await prisma.flightDayAgg.deleteMany({ where: { userId: internalUser.id } });
     const dayMap = new Map<
       string,
@@ -456,6 +463,8 @@ export async function POST(req: Request) {
       });
     }
 
+    // Rebuild route aggregates. A single flight may emit multiple legs if route/remarks
+    // include intermediate airports; total time is distributed across those legs.
     await prisma.routeAgg.deleteMany({ where: { userId: internalUser.id } });
     const routeMap = new Map<
       string,
@@ -506,6 +515,7 @@ export async function POST(req: Request) {
       });
     }
 
+    // Persist import outcomes and warning payload for dashboard troubleshooting.
     await prisma.importJob.update({
       where: { id: job.id },
       data: {
@@ -521,6 +531,7 @@ export async function POST(req: Request) {
       },
     });
 
+    // Cleanup uploaded artifact after successful import to reduce blob storage growth.
     if (job.blobPathname || job.blobUrl) {
       try {
         await del(job.blobPathname ?? job.blobUrl);
