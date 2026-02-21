@@ -61,12 +61,12 @@ export default async function RootLayout({
                   Demo
                 </Link>
                 <SignedOut>
-                  <Link
+                  {/* <Link
                     href="/pricing"
                     className="rounded-full px-4 py-2 transition hover:bg-[var(--panel-muted)] hover:text-[var(--text-strong)]"
                   >
                     Pricing
-                  </Link>
+                  </Link> */}
                 </SignedOut>
                 <SignedIn>
                   {myHandle ? (
