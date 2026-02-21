@@ -21,6 +21,15 @@ import type { EventsKey } from "ol/events";
 type Airport = { code: string; lat: number; lon: number; name?: string | null };
 type Route = { from: string; to: string; count: number };
 
+function hexToRgba(hex: string, alpha: number): string {
+  const value = hex.replace("#", "");
+  if (!/^[0-9a-fA-F]{6}$/.test(value)) return `rgba(29,78,216,${alpha})`;
+  const r = Number.parseInt(value.slice(0, 2), 16);
+  const g = Number.parseInt(value.slice(2, 4), 16);
+  const b = Number.parseInt(value.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
 export default function FlightsMap({ airports, routes }: { airports: Airport[]; routes: Route[] }) {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const mapObj = useRef<Map | null>(null);
@@ -40,6 +49,11 @@ export default function FlightsMap({ airports, routes }: { airports: Airport[]; 
   useEffect(() => {
     if (!mapRef.current) return;
     const osmSource = new OSM();
+    const cssVars = getComputedStyle(mapRef.current);
+    const accent = cssVars.getPropertyValue("--accent").trim() || "#1d4ed8";
+    const panelMuted = cssVars.getPropertyValue("--panel-muted").trim() || "#dbe4f2";
+    const textStrong = cssVars.getPropertyValue("--text-strong").trim() || "#020617";
+    const bg = cssVars.getPropertyValue("--bg").trim() || "#e9eef9";
 
     const map = new Map({
       target: mapRef.current,
@@ -56,9 +70,10 @@ export default function FlightsMap({ airports, routes }: { airports: Airport[]; 
 
             const width = Math.min(tier === "thin" ? 2 : tier === "med" ? 4 : 6, 6);
             if (!routeStyleCache.current[tier]) {
+              const opacity = tier === "thin" ? 0.55 : tier === "med" ? 0.75 : 0.92;
               routeStyleCache.current[tier] = new Style({
                 stroke: new Stroke({
-                  color: tier === "thin" ? "rgba(31,75,113,0.6)" : "rgba(31,75,113,0.9)",
+                  color: hexToRgba(accent, opacity),
                   width,
                   lineCap: "round",
                   lineJoin: "round",
@@ -74,15 +89,15 @@ export default function FlightsMap({ airports, routes }: { airports: Airport[]; 
             new Style({
               image: new CircleStyle({
                 radius: 5,
-                fill: new Fill({ color: "#0b1f33" }),
-                stroke: new Stroke({ color: "#f3f7fc", width: 2 }),
+                fill: new Fill({ color: textStrong }),
+                stroke: new Stroke({ color: panelMuted, width: 2 }),
               }),
               text: new TextStyle({
                 text: feature.get("icao"),
                 offsetY: -12,
                 font: "600 12px sans-serif",
-                fill: new Fill({ color: "#0b1f33" }),
-                stroke: new Stroke({ color: "#eaf1f8", width: 3 }),
+                fill: new Fill({ color: textStrong }),
+                stroke: new Stroke({ color: bg, width: 3 }),
               }),
             }),
         }),
@@ -213,16 +228,16 @@ export default function FlightsMap({ airports, routes }: { airports: Airport[]; 
         tooltipRef.current.style.display = "none";
       }
     });
-  }, [routes]);
+  }, [airports, routes]);
 
   return (
-    <div className="rounded-2xl border border-[#d4e0ec] bg-white p-4 shadow-sm">
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-4 shadow-sm">
       <div
         ref={mapRef}
-        className="relative h-[320px] w-full overflow-hidden rounded-xl bg-[#eaf1f8] pointer-events-auto sm:h-[380px] lg:h-[420px]"
+        className="relative h-[320px] w-full overflow-hidden rounded-xl bg-[var(--bg)] pointer-events-auto sm:h-[380px] lg:h-[420px]"
         aria-label="Flight routes map"
       />
-      <p className="mt-2 text-[11px] text-[#4b647c]">
+      <p className="mt-2 text-[11px] text-[var(--muted-2)]">
         Tip: verify tile requests in Network tab (tile.openstreetmap.org) if the basemap is blank.
       </p>
     </div>

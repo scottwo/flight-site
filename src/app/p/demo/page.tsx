@@ -2,7 +2,6 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { PilotProfilePage } from "@/app/pilot/page";
-import { CumulativeHoursChart } from "@/components/CumulativeHoursChart";
 import type { RouteLeg } from "@/lib/routes";
 
 type Flight = {
@@ -383,7 +382,6 @@ export default async function DemoProfilePage() {
   const flights = JSON.parse(flightsRaw) as Flight[];
 
   const today = new Date();
-  const startOfThisMonthUtc = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1);
   // Include current month plus previous 5 full months
   const startOfSixCalMonthsAgoUtc = Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - 5, 1);
 

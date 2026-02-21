@@ -77,7 +77,7 @@ export function CurrencyCards({ flights, window90Start, window180Start }: Props)
               <span
                 className={`rounded-full px-3 py-1 text-xs font-semibold ${
                   card.current
-                    ? "bg-[var(--accent)] text-white"
+                    ? "bg-[var(--accent)] text-[var(--accent-text)]"
                     : "border border-[var(--border)] bg-[var(--panel)] text-[var(--text-strong)]"
                 }`}
               >

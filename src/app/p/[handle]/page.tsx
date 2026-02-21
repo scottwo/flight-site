@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 
 import { CumulativeHoursChart } from "@/components/CumulativeHoursChart";
 import FlightsMap from "@/components/FlightsMap";
+import ThemeScope from "@/components/ThemeScope";
 import { CurrencyCards } from "@/components/pilot/CurrencyCards";
 import { FunFacts, type FunFact } from "@/components/pilot/FunFacts";
 import { Heatmap } from "@/components/pilot/Heatmap";
@@ -14,6 +15,7 @@ import { RoutesTable } from "@/components/pilot/RoutesTable";
 import { StatsCards } from "@/components/pilot/StatsCards";
 import { getUserMapData } from "@/lib/map/getMapData";
 import { prisma } from "@/lib/prisma";
+import { toThemeSettings } from "@/lib/theme";
 
 type PageProps = {
   params: { handle: string };
@@ -251,9 +253,15 @@ export default async function PublicProfilePage({ params }: PageProps) {
       to: r.to.icao,
       count: r.count,
     }));
+  const themeSettings = toThemeSettings({
+    themeMode: profile.themeMode,
+    themePrimary: profile.themePrimary,
+    themeSecondary: profile.themeSecondary,
+    themeGuardrails: profile.themeGuardrails,
+  });
 
   return (
-    <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+    <ThemeScope settings={themeSettings} className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-12">
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
           <div className="space-y-1">
@@ -326,6 +334,6 @@ export default async function PublicProfilePage({ params }: PageProps) {
           </Link>
         </div>
       </div>
-    </main>
+    </ThemeScope>
   );
 }

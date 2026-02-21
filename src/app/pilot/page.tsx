@@ -1,6 +1,7 @@
 import FlightsMap from "@/components/FlightsMap";
 import FunFacts from "@/components/FunFacts";
 import { CumulativeHoursChart } from "@/components/CumulativeHoursChart";
+import ThemeScope from "@/components/ThemeScope";
 import { formatCount, formatHours, getHeatmap, getStats } from "@/lib/stats";
 import { getRoutes } from "@/lib/routes";
 
@@ -110,11 +111,11 @@ export async function PilotProfilePage({
   const heatmapSorted = [...heatmap90].sort((a, b) => a.date.localeCompare(b.date));
   const maxHeatmapHours = heatmapSorted.reduce((max, entry) => Math.max(max, entry.hours), 0);
   const heatLevels = [
-    { threshold: 0, className: "bg-[#eaf1f8] border border-[#d4e0ec]" },
-    { threshold: 0.15, className: "bg-[#c8dbf1]" },
-    { threshold: 0.35, className: "bg-[#9cb6cf]" },
-    { threshold: 0.6, className: "bg-[#6a91b8]" },
-    { threshold: 1, className: "bg-[#1f4b71]" },
+    { threshold: 0, className: "bg-[var(--bg)] border border-[var(--border)]" },
+    { threshold: 0.15, className: "bg-[color-mix(in_srgb,var(--accent)_20%,var(--panel-muted))]" },
+    { threshold: 0.35, className: "bg-[color-mix(in_srgb,var(--accent)_40%,var(--panel-muted))]" },
+    { threshold: 0.6, className: "bg-[color-mix(in_srgb,var(--accent)_65%,var(--panel-muted))]" },
+    { threshold: 1, className: "bg-[var(--accent)]" },
   ];
   const getHeatClass = (hours: number) => {
     if (maxHeatmapHours === 0) return heatLevels[0].className;
@@ -188,27 +189,27 @@ export async function PilotProfilePage({
     .map((r) => ({ from: r.from.icao, to: r.to.icao, count: r.count }));
 
   return (
-    <div className="min-h-screen bg-[#eaf1f8] text-[#0b1f33]">
+    <ThemeScope className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <div className="mx-auto flex max-w-6xl flex-col gap-10 px-6 py-16">
         <header className="space-y-3">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#5d7995]">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--muted-2)]">
             Pilot Profile
           </p>
-          <h1 className="text-4xl font-semibold text-[#0b1f33] sm:text-5xl">
+          <h1 className="text-4xl font-semibold text-[var(--text)] sm:text-5xl">
             Flight hours and ratings snapshot
           </h1>
         </header>
 
         <section className="grid grid-cols-1">
-          <main className="w-full rounded-3xl border border-[#d4e0ec] bg-white px-6 py-10 shadow-sm md:col-span-3">
+          <main className="w-full rounded-3xl border border-[var(--border)] bg-[var(--panel)] px-6 py-10 shadow-sm md:col-span-3">
             <h1 className="text-4xl font-semibold tracking-tight">Pilot</h1>
 
             <section className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {summaryCards.map((card) => (
-                <div key={card.label} className="rounded-2xl border border-[#d4e0ec] bg-white p-5 shadow-sm">
-                  <div className="text-sm text-[#5d7995]">{card.label}</div>
-                  <div className="mt-2 text-3xl font-semibold text-[#0b1f33]">{card.value}</div>
-                  <div className="text-sm text-[#35506c]">{card.helper}</div>
+                <div key={card.label} className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-5 shadow-sm">
+                  <div className="text-sm text-[var(--muted-2)]">{card.label}</div>
+                  <div className="mt-2 text-3xl font-semibold text-[var(--text)]">{card.value}</div>
+                  <div className="text-sm text-[var(--muted)]">{card.helper}</div>
                 </div>
               ))}
             </section>
@@ -218,25 +219,25 @@ export async function PilotProfilePage({
             {monthlyTotals.length > 0 && (
               <section className="mt-12 space-y-3">
                 <div>
-                  <h2 className="text-2xl font-semibold text-[#0b1f33]">Recent monthly totals</h2>
-                  <p className="text-sm text-[#4b647c]">Flight time from your LogTen export.</p>
+                  <h2 className="text-2xl font-semibold text-[var(--text)]">Recent monthly totals</h2>
+                  <p className="text-sm text-[var(--muted-2)]">Flight time from your LogTen export.</p>
                 </div>
-                <div className="rounded-2xl border border-[#d4e0ec] bg-[#f3f7fc] p-5 shadow-sm">
+                <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel-muted)] p-5 shadow-sm">
                   <div className="flex items-end gap-4">
                     {monthlyTotals.map((month) => {
                       const barHeight = maxMonthlyTotal > 0 ? (month.total / maxMonthlyTotal) * 100 : 0;
                       return (
                         <div key={month.month} className="flex-1 text-center">
-                          <div className="flex h-40 items-end justify-center rounded-xl bg-white/70 p-2">
+                          <div className="flex h-40 items-end justify-center rounded-xl bg-[var(--panel)]/70 p-2">
                             <div
-                              className="w-8 rounded-lg bg-[#1f4b71] shadow-sm transition"
+                              className="w-8 rounded-lg bg-[var(--accent)] shadow-sm transition"
                               style={{ height: `${barHeight}%` }}
                             />
                           </div>
-                          <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-[#5d7995]">
+                          <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-[var(--muted-2)]">
                             {month.label}
                           </p>
-                          <p className="text-sm font-semibold text-[#0b1f33]">
+                          <p className="text-sm font-semibold text-[var(--text)]">
                             {formatHours(month.total)} hrs
                           </p>
                         </div>
@@ -245,7 +246,7 @@ export async function PilotProfilePage({
                   </div>
                 </div>
                 {cumulativeOverride ? (
-                  <div className="rounded-2xl border border-[#d4e0ec] bg-white p-5 shadow-sm">
+                  <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-5 shadow-sm">
                     <CumulativeHoursChart data={cumulativeOverride.data} totalHours={cumulativeOverride.totalHours} />
                   </div>
                 ) : null}
@@ -253,48 +254,48 @@ export async function PilotProfilePage({
             )}
 
             <section className="mt-12 grid gap-6 lg:grid-cols-2">
-              <div className="space-y-4 rounded-3xl border border-[#d4e0ec] bg-white p-6 shadow-sm">
+              <div className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
                 <div className="space-y-1">
-                  <h2 className="text-2xl font-semibold text-[#0b1f33]">Currency</h2>
-                  <p className="text-sm text-[#4b647c]">Pulled from your latest LogTen export.</p>
+                  <h2 className="text-2xl font-semibold text-[var(--text)]">Currency</h2>
+                  <p className="text-sm text-[var(--muted-2)]">Pulled from your latest LogTen export.</p>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   {currencyItems.map((item) => (
                     <div
                       key={item.title}
-                      className="rounded-2xl border border-[#d4e0ec] bg-[#f3f7fc] p-4 shadow-sm"
+                      className="rounded-2xl border border-[var(--border)] bg-[var(--panel-muted)] p-4 shadow-sm"
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div>
-                          <p className="text-sm font-semibold text-[#0b1f33]">{item.title}</p>
-                          <p className="text-sm text-[#35506c]">{item.window}</p>
+                          <p className="text-sm font-semibold text-[var(--text)]">{item.title}</p>
+                          <p className="text-sm text-[var(--muted)]">{item.window}</p>
                         </div>
                         <span
                           className={`rounded-full px-3 py-1 text-xs font-semibold ${
                             item.current
-                              ? "bg-[#e1f5e6] text-[#1f7a3d] border border-[#b9e4c4]"
-                              : "bg-[#fff0e6] text-[#b45309] border border-[#f4d3ad]"
+                              ? "border border-emerald-400/40 bg-emerald-500/15 text-emerald-300"
+                              : "border border-amber-400/40 bg-amber-500/15 text-amber-200"
                           }`}
                         >
                           {item.current ? "Current" : "Out of Currency"}
                         </span>
                       </div>
-                      <div className="mt-2 text-2xl font-semibold text-[#0b1f33]">{item.value}</div>
-                      <p className="text-sm text-[#4b647c]">{item.requirement}</p>
+                      <div className="mt-2 text-2xl font-semibold text-[var(--text)]">{item.value}</div>
+                      <p className="text-sm text-[var(--muted-2)]">{item.requirement}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="space-y-4 rounded-3xl border border-[#d4e0ec] bg-white p-6 shadow-sm">
+              <div className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
                 <div className="space-y-1">
-                  <h2 className="text-2xl font-semibold text-[#0b1f33]">Recency heatmap</h2>
-                  <p className="text-sm text-[#4b647c]">
+                  <h2 className="text-2xl font-semibold text-[var(--text)]">Recency heatmap</h2>
+                  <p className="text-sm text-[var(--muted-2)]">
                     Last 90 days of flying. Each square is a flight day sized by hours; darker means more time that day.
                   </p>
                 </div>
-                <div className="rounded-2xl border border-[#d4e0ec] bg-[#f3f7fc] p-4 shadow-inner">
-                  <div className="mb-3 flex gap-1 text-[10px] font-semibold uppercase tracking-wide text-[#5d7995]">
+                <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel-muted)] p-4 shadow-inner">
+                  <div className="mb-3 flex gap-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--muted-2)]">
                     <span className="w-10" aria-hidden />
                     {weeks.map((_, idx) => (
                       <span key={idx} className="w-[18px] text-center">
@@ -303,7 +304,7 @@ export async function PilotProfilePage({
                     ))}
                   </div>
                   <div className="flex gap-2">
-                    <div className="flex w-10 flex-col justify-between text-right text-[10px] uppercase text-[#5d7995]">
+                    <div className="flex w-10 flex-col justify-between text-right text-[10px] uppercase text-[var(--muted-2)]">
                       {dayLabels.map((d) => (
                         <span key={d}>{d}</span>
                       ))}
@@ -333,7 +334,7 @@ export async function PilotProfilePage({
                       </div>
                     </div>
                   </div>
-                  <div className="mt-4 flex items-center gap-2 text-[11px] text-[#35506c]">
+                  <div className="mt-4 flex items-center gap-2 text-[11px] text-[var(--muted)]">
                     <span>Less</span>
                     <div className="flex items-center gap-1">
                       {heatLevels.map((level, idx) => (
@@ -352,8 +353,8 @@ export async function PilotProfilePage({
 
             <section className="mt-12 space-y-3">
               <div>
-                <h2 className="text-2xl font-semibold text-[#0b1f33]">Route map</h2>
-                <p className="text-sm text-[#4b647c]">
+                <h2 className="text-2xl font-semibold text-[var(--text)]">Route map</h2>
+                <p className="text-sm text-[var(--muted-2)]">
                   Segments from your sample routes export, sized by trip count.
                 </p>
               </div>
@@ -363,25 +364,25 @@ export async function PilotProfilePage({
         </section>
 
         <section className="grid gap-6 lg:grid-cols-2">
-          <div className="space-y-4 rounded-3xl border border-[#d4e0ec] bg-white p-6 shadow-sm">
+          <div className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
             <div className="space-y-2">
-              <h2 className="text-2xl font-semibold text-[#0b1f33]">Current Training Status</h2>
+              <h2 className="text-2xl font-semibold text-[var(--text)]">Current Training Status</h2>
             </div>
-            <ul className="space-y-3 text-sm text-[#35506c]">
+            <ul className="space-y-3 text-sm text-[var(--muted)]">
               <li>Fleet focus: A320/B737 family (Delta mainline)</li>
               <li>Line-qualified on domestic trunk routes; ETOPS familiarization complete</li>
               <li>First Class Medical | Passport ready | FCC Radiotelephone License</li>
             </ul>
           </div>
 
-          <div className="space-y-4 rounded-3xl border border-[#d4e0ec] bg-white p-6 shadow-sm">
+          <div className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
             <div className="space-y-2">
-              <h2 className="text-2xl font-semibold text-[#0b1f33]">Operational experience</h2>
-              <p className="text-sm text-[#4b647c]">
+              <h2 className="text-2xl font-semibold text-[var(--text)]">Operational experience</h2>
+              <p className="text-sm text-[var(--muted-2)]">
                 The environments and procedures you know best.
               </p>
             </div>
-            <ul className="space-y-3 text-sm text-[#35506c]">
+            <ul className="space-y-3 text-sm text-[var(--muted)]">
               <li>Hub-and-spoke ops across SLC, MSP, ATL, JFK/LGA, SEA, DEN</li>
               <li>Mountain ops into SLC/BOI/COS; winter operations and de-ice coordination</li>
               <li>Busy airspace: JFK/LGA/EWR/BOS/DC metros; RNAV/RNP and ILS proficiency</li>
@@ -391,10 +392,10 @@ export async function PilotProfilePage({
         </section>
 
         <section className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2 space-y-4 rounded-3xl border border-[#d4e0ec] bg-white p-6 shadow-sm">
+          <div className="lg:col-span-2 space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
             <div className="space-y-2">
-              <h2 className="text-2xl font-semibold text-[#0b1f33]">Recent roles</h2>
-              <p className="text-sm text-[#4b647c]">
+              <h2 className="text-2xl font-semibold text-[var(--text)]">Recent roles</h2>
+              <p className="text-sm text-[var(--muted-2)]">
                 A quick timeline you can refine with employers, dates, and fleets.
               </p>
             </div>
@@ -421,21 +422,21 @@ export async function PilotProfilePage({
               ].map((role) => (
                 <div
                   key={`${role.title}-${role.org}`}
-                  className="rounded-2xl border border-[#d4e0ec] bg-[#f3f7fc] p-4"
+                  className="rounded-2xl border border-[var(--border)] bg-[var(--panel-muted)] p-4"
                 >
-                  <p className="text-sm font-semibold text-[#0b1f33]">
+                  <p className="text-sm font-semibold text-[var(--text)]">
                     {role.title}
                   </p>
-                  <p className="text-sm text-[#4b647c]">{role.org}</p>
-                  <p className="mt-1 text-sm text-[#35506c]">{role.detail}</p>
+                  <p className="text-sm text-[var(--muted-2)]">{role.org}</p>
+                  <p className="mt-1 text-sm text-[var(--muted)]">{role.detail}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="space-y-4 rounded-3xl border border-[#d4e0ec] bg-white p-6 shadow-sm">
-            <h2 className="text-2xl font-semibold text-[#0b1f33]">Training Milestones</h2>
-            <ul className="space-y-3 text-sm text-[#35506c]">
+          <div className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
+            <h2 className="text-2xl font-semibold text-[var(--text)]">Training Milestones</h2>
+            <ul className="space-y-3 text-sm text-[var(--muted)]">
               <li>ATP/CTP complete; First Class Medical</li>
               <li>A320/B737 differences training | RVSM/ETOPS familiarization</li>
               <li>Recurrent sims: stalls/UAS, upset recovery, RTO, engine-out drift-down</li>
@@ -445,7 +446,7 @@ export async function PilotProfilePage({
           </div>
         </section>
       </div>
-    </div>
+    </ThemeScope>
   );
 }
 

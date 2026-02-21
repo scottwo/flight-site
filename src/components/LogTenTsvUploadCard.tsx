@@ -187,7 +187,7 @@ export default function LogTenTsvUploadCard() {
                 type="button"
                 onClick={triggerImport}
                 disabled={importing || !job?.id}
-                className="rounded-full bg-[var(--accent)] px-4 py-2 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
+                className="rounded-full bg-[var(--accent)] px-4 py-2 text-xs font-semibold text-[var(--accent-text)] transition hover:opacity-90 disabled:opacity-60"
               >
                 {importing ? "Starting..." : "Import now"}
               </button>

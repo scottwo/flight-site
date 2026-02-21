@@ -45,22 +45,22 @@ export default function FunFacts({ facts }: { facts?: FunFact[] }) {
   if (!selected.length) return null;
 
   return (
-    <section className="mt-10 rounded-3xl border border-[#d4e0ec] bg-white p-6 shadow-sm">
+    <section className="mt-10 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
       <div className="mb-4">
-        <h2 className="text-2xl font-semibold text-[#0b1f33]">Fun facts</h2>
-        <p className="text-sm text-[#4b647c]">A few quick highlights from your logbook.</p>
+        <h2 className="text-2xl font-semibold text-[var(--text)]">Fun facts</h2>
+        <p className="text-sm text-[var(--muted-2)]">A few quick highlights from your logbook.</p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         {selected.map((fact) => (
           <div
             key={fact.id}
-            className="rounded-2xl border border-[#d4e0ec] bg-[#f3f7fc] p-4 shadow-sm"
+            className="rounded-2xl border border-[var(--border)] bg-[var(--panel-muted)] p-4 shadow-sm"
           >
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#5d7995]">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-2)]">
               {fact.label}
             </p>
-            <p className="mt-1 text-2xl font-semibold text-[#0b1f33]">{fact.value}</p>
-            {fact.detail && <p className="text-sm text-[#35506c]">{fact.detail}</p>}
+            <p className="mt-1 text-2xl font-semibold text-[var(--text)]">{fact.value}</p>
+            {fact.detail && <p className="text-sm text-[var(--muted)]">{fact.detail}</p>}
           </div>
         ))}
       </div>

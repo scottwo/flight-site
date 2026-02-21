@@ -15,7 +15,7 @@ export default async function Home() {
     <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <div className="mx-auto flex max-w-6xl flex-col gap-12 px-6 py-16">
         <header className="space-y-4">
-          <p className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white shadow-sm">
+          <p className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--accent-text)] shadow-sm">
             MyPilotPage
           </p>
           <h1 className="text-4xl font-semibold leading-tight text-[var(--text)] sm:text-5xl">
@@ -42,7 +42,7 @@ export default async function Home() {
             ) : (
               <Link
                 href="/sign-up"
-                className="inline-flex items-center justify-center rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+                className="inline-flex items-center justify-center rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-[var(--accent-text)] shadow-sm transition hover:opacity-90"
               >
                 Sign up
               </Link>

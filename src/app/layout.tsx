@@ -10,7 +10,6 @@ import {
 import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prisma";
 import "./globals.css";
-import ThemeToggle from "@/components/ThemeToggle";
 
 export const metadata: Metadata = {
   title: "MyPilotPage",
@@ -41,11 +40,6 @@ export default async function RootLayout({
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
         <body className="antialiased bg-[var(--bg)] text-[var(--text)]">
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `(function(){try{const t=localStorage.getItem("mypilotpage-theme");const sysDark=typeof window!=="undefined"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;const th=t==="dark"||t==="light"?t:(sysDark?"dark":"light");document.documentElement.classList.toggle("dark",th==="dark");document.documentElement.setAttribute("data-theme",th);}catch(e){}})();`,
-            }}
-          />
           <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[color-mix(in srgb,var(--panel) 85%,transparent)] backdrop-blur">
             <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
               <a href="/" className="text-lg font-semibold text-[var(--text)]">
@@ -94,7 +88,6 @@ export default async function RootLayout({
                 </SignedIn>
               </nav>
               <div className="flex items-center gap-3">
-                <ThemeToggle />
                 <SignedOut>
                   <SignInButton mode="modal">
                     <button className="rounded-full border border-[var(--border)] bg-[var(--panel)] px-4 py-2 text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--panel-muted)] hover:text-[var(--text-strong)]">
@@ -102,13 +95,13 @@ export default async function RootLayout({
                     </button>
                   </SignInButton>
                   <SignUpButton mode="modal">
-                    <button className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-90">
+                    <button className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-text)] transition hover:brightness-90">
                       Sign up
                     </button>
                   </SignUpButton>
                 </SignedOut>
                 <SignedIn>
-                  <UserButton appearance={{ elements: { userButtonAvatarBox: "ring-2 ring-[#1f4b71]" } }} />
+                  <UserButton appearance={{ elements: { userButtonAvatarBox: "ring-2 ring-[var(--accent)]" } }} />
                 </SignedIn>
               </div>
             </div>
