@@ -256,7 +256,7 @@ export async function PilotProfilePage({
             )}
 
             <section className="mt-12 grid gap-6 lg:grid-cols-2">
-              <div className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-4 shadow-sm sm:p-6">
+              <div className="min-w-0 space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-4 shadow-sm sm:p-6">
                 <div className="space-y-1">
                   <h2 className="text-2xl font-semibold text-[var(--text)]">Currency</h2>
                   <p className="text-sm text-[var(--muted-2)]">Pulled from your latest LogTen export.</p>
@@ -267,10 +267,10 @@ export async function PilotProfilePage({
                       key={item.title}
                       className="rounded-2xl border border-[var(--border)] bg-[var(--panel-muted)] p-4 shadow-sm"
                     >
-                      <div className="flex items-center justify-between gap-3">
+                      <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
                         <div>
                           <p className="text-sm font-semibold text-[var(--text)]">{item.title}</p>
-                          <p className="text-sm text-[var(--muted)]">{item.window}</p>
+                          <p className="text-xs text-[var(--muted)] sm:text-sm">{item.window}</p>
                         </div>
                         <span
                           className={`rounded-full px-3 py-1 text-xs font-semibold ${
@@ -289,7 +289,7 @@ export async function PilotProfilePage({
                 </div>
               </div>
 
-              <div className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-4 shadow-sm sm:p-6">
+              <div className="min-w-0 space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-4 shadow-sm sm:p-6">
                 <div className="space-y-1">
                   <h2 className="text-2xl font-semibold text-[var(--text)]">Recency heatmap</h2>
                   <p className="text-sm text-[var(--muted-2)]">
@@ -298,21 +298,21 @@ export async function PilotProfilePage({
                 </div>
                 <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel-muted)] p-4 shadow-inner">
                   <div className="mb-3 flex gap-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--muted-2)]">
-                    <span className="w-10" aria-hidden />
+                    <span className="hidden w-10 sm:block" aria-hidden />
                     {weeks.map((_, idx) => (
-                      <span key={idx} className="w-[18px] text-center">
+                      <span key={idx} className="w-[14px] text-center sm:w-[18px]">
                         {monthLabels[idx]}
                       </span>
                     ))}
                   </div>
                   <div className="flex gap-2">
-                    <div className="flex w-10 flex-col justify-between text-right text-[10px] uppercase text-[var(--muted-2)]">
+                    <div className="hidden w-10 flex-col justify-between text-right text-[10px] uppercase text-[var(--muted-2)] sm:flex">
                       {dayLabels.map((d) => (
                         <span key={d}>{d}</span>
                       ))}
                     </div>
                     <div className="overflow-x-auto">
-                      <div className="min-w-[240px] grid grid-flow-col auto-cols-[16px] grid-rows-7 gap-1 sm:auto-cols-[18px] sm:min-w-[280px]">
+                      <div className="grid min-w-[350px] grid-flow-col auto-cols-[12px] grid-rows-7 gap-1 sm:min-w-[280px] sm:auto-cols-[18px]">
                         {weeks.flatMap((week, weekIdx) =>
                           week.map((day, dayIdx) => {
                             const hours = day.entry?.hours ?? 0;
@@ -326,7 +326,7 @@ export async function PilotProfilePage({
                             return (
                               <div
                                 key={`${weekIdx}-${dayIdx}`}
-                                className={`h-[16px] w-[16px] rounded-sm sm:h-[18px] sm:w-[18px] ${cls}`}
+                                className={`h-[12px] w-[12px] rounded-sm sm:h-[18px] sm:w-[18px] ${cls}`}
                                 title={`${label} • ${formatHours(hours)} hrs • ${formatCount(flights)} flights`}
                                 aria-label={`${label} • ${formatHours(hours)} hours • ${formatCount(flights)} flights`}
                               />

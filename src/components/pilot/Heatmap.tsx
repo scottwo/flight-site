@@ -95,7 +95,7 @@ export function Heatmap({ data, title = "Recent flying" }: Props) {
         </div>
       </div>
       <div className="overflow-x-auto">
-        <div className="flex min-w-[520px] gap-1 sm:min-w-0">
+        <div className="flex min-w-[420px] gap-1 pb-1 sm:min-w-0">
           {weeks.map((week, idx) => (
             <div key={idx} className="flex flex-col gap-1">
               {week.map((day) => {
@@ -104,7 +104,7 @@ export function Heatmap({ data, title = "Recent flying" }: Props) {
                 return (
                   <div
                     key={day.iso}
-                    className="h-3.5 w-3.5 rounded-sm border border-[var(--border)] bg-[var(--accent)] sm:h-4 sm:w-4"
+                    className="h-3 w-3 rounded-sm border border-[var(--border)] bg-[var(--accent)] sm:h-4 sm:w-4"
                     style={{ opacity }}
                     title={`${day.iso} – ${day.value.toFixed(1)} hrs`}
                   />

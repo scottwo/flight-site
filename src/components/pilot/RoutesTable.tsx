@@ -38,7 +38,7 @@ export function RoutesTable({ routes }: Props) {
       <div className="mb-3 flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold text-[var(--text)]">Top 5 Routes</h2>
-          <p className="text-sm text-[var(--muted)]">
+          <p className="break-words text-xs text-[var(--muted)] sm:text-sm">
             {uniqueAirports.size} airports • Most common:{" "}
             {mostCommon.fromIcao} → {mostCommon.toIcao}
           </p>
@@ -47,14 +47,14 @@ export function RoutesTable({ routes }: Props) {
       <div className="space-y-2 sm:hidden">
         {routes.map((route) => (
           <div key={`${route.fromIcao}-${route.toIcao}`} className="rounded-2xl border border-[var(--border)] bg-[var(--panel-muted)] p-3">
-            <p className="text-sm font-semibold text-[var(--text)]">
+            <p className="break-words text-sm font-semibold text-[var(--text)]">
               {route.fromIcao} → {route.toIcao}
             </p>
             <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-[var(--muted)]">
-              <p>
+              <p className="rounded-lg bg-[var(--panel)] px-2 py-1">
                 Flights: <span className="font-semibold text-[var(--text-strong)]">{route.flightsCount}</span>
               </p>
-              <p>
+              <p className="rounded-lg bg-[var(--panel)] px-2 py-1">
                 Time: <span className="font-semibold text-[var(--text-strong)]">{route.totalTime.toFixed(1)} hrs</span>
               </p>
               <p className="col-span-2">
