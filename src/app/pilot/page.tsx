@@ -190,7 +190,7 @@ export async function PilotProfilePage({
 
   return (
     <ThemeScope className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
-      <div className="mx-auto flex max-w-6xl flex-col gap-10 px-6 py-16">
+      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-10 sm:gap-10 sm:px-6 sm:py-16">
         <header className="space-y-3">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--muted-2)]">
             Pilot Profile
@@ -201,8 +201,8 @@ export async function PilotProfilePage({
         </header>
 
         <section className="grid grid-cols-1">
-          <main className="w-full rounded-3xl border border-[var(--border)] bg-[var(--panel)] px-6 py-10 shadow-sm md:col-span-3">
-            <h1 className="text-4xl font-semibold tracking-tight">Pilot</h1>
+          <main className="w-full rounded-3xl border border-[var(--border)] bg-[var(--panel)] px-4 py-6 shadow-sm sm:px-6 sm:py-10 md:col-span-3">
+            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Pilot</h1>
 
             <section className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {summaryCards.map((card) => (
@@ -222,8 +222,9 @@ export async function PilotProfilePage({
                   <h2 className="text-2xl font-semibold text-[var(--text)]">Recent monthly totals</h2>
                   <p className="text-sm text-[var(--muted-2)]">Flight time from your LogTen export.</p>
                 </div>
-                <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel-muted)] p-5 shadow-sm">
-                  <div className="flex items-end gap-4">
+                <div className="rounded-2xl border border-[var(--border)] bg-[var(--panel-muted)] p-3 shadow-sm sm:p-5">
+                  <div className="overflow-x-auto">
+                    <div className="flex min-w-[680px] items-end gap-4">
                     {monthlyTotals.map((month) => {
                       const barHeight = maxMonthlyTotal > 0 ? (month.total / maxMonthlyTotal) * 100 : 0;
                       return (
@@ -243,6 +244,7 @@ export async function PilotProfilePage({
                         </div>
                       );
                     })}
+                    </div>
                   </div>
                 </div>
                 {cumulativeOverride ? (
@@ -254,7 +256,7 @@ export async function PilotProfilePage({
             )}
 
             <section className="mt-12 grid gap-6 lg:grid-cols-2">
-              <div className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
+              <div className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-4 shadow-sm sm:p-6">
                 <div className="space-y-1">
                   <h2 className="text-2xl font-semibold text-[var(--text)]">Currency</h2>
                   <p className="text-sm text-[var(--muted-2)]">Pulled from your latest LogTen export.</p>
@@ -287,7 +289,7 @@ export async function PilotProfilePage({
                 </div>
               </div>
 
-              <div className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
+              <div className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-4 shadow-sm sm:p-6">
                 <div className="space-y-1">
                   <h2 className="text-2xl font-semibold text-[var(--text)]">Recency heatmap</h2>
                   <p className="text-sm text-[var(--muted-2)]">
@@ -364,7 +366,7 @@ export async function PilotProfilePage({
         </section>
 
         <section className="grid gap-6 lg:grid-cols-2">
-          <div className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
+          <div className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-4 shadow-sm sm:p-6">
             <div className="space-y-2">
               <h2 className="text-2xl font-semibold text-[var(--text)]">Current Training Status</h2>
             </div>
@@ -375,7 +377,7 @@ export async function PilotProfilePage({
             </ul>
           </div>
 
-          <div className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
+          <div className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-4 shadow-sm sm:p-6">
             <div className="space-y-2">
               <h2 className="text-2xl font-semibold text-[var(--text)]">Operational experience</h2>
               <p className="text-sm text-[var(--muted-2)]">
@@ -392,7 +394,7 @@ export async function PilotProfilePage({
         </section>
 
         <section className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2 space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
+          <div className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-4 shadow-sm sm:p-6 lg:col-span-2">
             <div className="space-y-2">
               <h2 className="text-2xl font-semibold text-[var(--text)]">Recent roles</h2>
               <p className="text-sm text-[var(--muted-2)]">
@@ -434,7 +436,7 @@ export async function PilotProfilePage({
             </div>
           </div>
 
-          <div className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
+          <div className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-4 shadow-sm sm:p-6">
             <h2 className="text-2xl font-semibold text-[var(--text)]">Training Milestones</h2>
             <ul className="space-y-3 text-sm text-[var(--muted)]">
               <li>ATP/CTP complete; First Class Medical</li>

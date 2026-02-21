@@ -66,7 +66,7 @@ export function CumulativeHoursChart({ data, totalHours }: Props) {
   });
 
   return (
-    <section className="rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
+    <section className="rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-4 shadow-sm sm:p-6">
       <div className="mb-3 flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold text-[var(--text)]">Cumulative flight time</h2>
@@ -78,11 +78,11 @@ export function CumulativeHoursChart({ data, totalHours }: Props) {
       </div>
       <div className="w-full overflow-x-auto">
         <svg
-          width="100%"
+          width={width}
           viewBox={`0 0 ${width} ${height}`}
           role="img"
           aria-label="Cumulative flight time line chart"
-          className="text-[var(--accent)]"
+          className="min-w-[640px] text-[var(--accent)]"
         >
           <rect
             x={padding}
