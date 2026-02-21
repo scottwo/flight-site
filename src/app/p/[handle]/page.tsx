@@ -274,8 +274,8 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
   return (
     <ThemeScope settings={themeSettings} className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
-      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-12">
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
+      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-12">
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-4 shadow-sm sm:p-6">
           <div className="space-y-1">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--muted-2)]">Pilot profile</p>
             <h1 className="text-4xl font-semibold text-[var(--text)]">{profile.displayName}</h1>
@@ -300,7 +300,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
         <CurrencyCards flights={currencyFlights} window90Start={currency90Start} window180Start={currency180Start} />
 
-        <div className="rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
+        <div className="rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-4 shadow-sm sm:p-6">
           <div className="flex items-baseline justify-between gap-4">
             <div>
               <h2 className="text-lg font-semibold text-[var(--text)]">Routes map</h2>

@@ -76,8 +76,8 @@ export function Heatmap({ data, title = "Recent flying" }: Props) {
   };
 
   return (
-    <section className="rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
-      <div className="mb-4 flex items-center justify-between">
+    <section className="rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-4 shadow-sm sm:p-6">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-[var(--text)]">{title}</h2>
           <p className="text-sm text-[var(--muted)]">Hours flown per day</p>
@@ -87,7 +87,7 @@ export function Heatmap({ data, title = "Recent flying" }: Props) {
           {[1, 2, 3].map((l) => (
             <span
               key={l}
-              className="h-4 w-4 rounded-sm bg-[var(--accent)]"
+              className="h-3.5 w-3.5 rounded-sm bg-[var(--accent)] sm:h-4 sm:w-4"
               style={{ opacity: 0.2 + l * 0.2 }}
             />
           ))}
@@ -95,7 +95,7 @@ export function Heatmap({ data, title = "Recent flying" }: Props) {
         </div>
       </div>
       <div className="overflow-x-auto">
-        <div className="flex gap-1">
+        <div className="flex min-w-[520px] gap-1 sm:min-w-0">
           {weeks.map((week, idx) => (
             <div key={idx} className="flex flex-col gap-1">
               {week.map((day) => {
@@ -104,7 +104,7 @@ export function Heatmap({ data, title = "Recent flying" }: Props) {
                 return (
                   <div
                     key={day.iso}
-                    className="h-4 w-4 rounded-sm border border-[var(--border)] bg-[var(--accent)]"
+                    className="h-3.5 w-3.5 rounded-sm border border-[var(--border)] bg-[var(--accent)] sm:h-4 sm:w-4"
                     style={{ opacity }}
                     title={`${day.iso} – ${day.value.toFixed(1)} hrs`}
                   />
