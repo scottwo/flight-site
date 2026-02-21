@@ -84,13 +84,17 @@ export default async function ImportPage() {
 
         <section className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-[var(--text)]">LogTen TSV importer</h2>
-          <ImportGuideAccordion title="How to import from LogTen (stub)">
-            <p>Replace this with your final LogTen import guide.</p>
+          <ImportGuideAccordion title="How to import from LogTen Pro (Click to Expand)">
             <ul className="mt-2 space-y-1">
-              <li>1. Describe exactly where to export TSV/text from LogTen.</li>
-              <li>2. List required export options/fields and any format notes.</li>
-              <li>3. Explain upload + import steps and expected completion messages.</li>
-              <li>4. Add troubleshooting for parse errors, missing airports, and date formats.</li>
+              <li>1. (On either Desktop or Mobile) Navigate to the Reports page from the menu</li>
+              <li>2. Click "Exporters"</li>
+              <li>3. Click "Export Flights (Tab)"</li>
+              <li>4. (On Desktop) Click "Generate Report" (On Mobile) Click "Configure Report"</li>
+              <li>5. Save somewhere you can retrieve easily</li>
+              <li>6. Click "Choose file" button under "LogTen TSV Importer" on this page</li>
+              <li>7. Find saved export from LogTenPro and click "Upload"</li>
+              <li>8. Once upload is complete, click "Import Now" button</li>
+              <li>9. If there are errors, please let me know with a screenshot sent via the form on "Contact" page</li>
             </ul>
           </ImportGuideAccordion>
           <LogTenTsvUploadCard />
@@ -98,13 +102,29 @@ export default async function ImportPage() {
 
         <section className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-[var(--text)]">ForeFlight CSV importer</h2>
-          <ImportGuideAccordion title="How to import from ForeFlight (stub)">
-            <p>Replace this with your final ForeFlight import guide.</p>
+          <ImportGuideAccordion title="How to import from ForeFlight (Click to Expand)">
+            <p><b>Desktop</b></p>
             <ul className="mt-2 space-y-1">
-              <li>1. Describe where to export the Logbook CSV in ForeFlight.</li>
-              <li>2. Call out required columns and known limitations.</li>
-              <li>3. Explain upload + import flow and how long processing usually takes.</li>
-              <li>4. Add troubleshooting for missing routes/airports and malformed CSV rows.</li>
+              <li>1. Log in to ForeFlight and nagivate to Logbook</li>
+              <li>2. Click "Export" on the top menu</li>
+              <li>3. Click "Export" on the page and wait for the CSV to download</li>
+              <li>4. Click "Choose file" button under "ForeFlight CSV importer" on this page</li>
+              <li>5. Find saved export from ForeFlight and click "Upload"</li>
+              <li>6. Once upload is complete, click "Import Now" button</li>
+              <li>7. If there are errors, please let me know with a screenshot sent via the form on "Contact" page</li>
+            </ul>
+            <p><b>Mobile</b></p>
+            <ul className="mt-2 space-y-1">
+              <li>1. Open ForeFlight app</li>
+              <li>2. Navigate to Logbook on the menu (might need to click "More")</li>
+              <li>3. Click "Settings" at the bottom of the menu</li>
+              <li>4. Scroll down to the "Auto-Export" option</li>
+              <li>5. Enable (if not already enabled) and click "Export Now" (This will send you an email with the CSV attached)</li>
+              <li>6. Download the CSV from the email</li>
+              <li>7. Click "Choose file" button under "ForeFlight CSV importer" on this page</li>
+              <li>8. Find saved export from ForeFlight and click "Upload"</li>
+              <li>9. Once upload is complete, click "Import Now" button</li>
+              <li>10. If there are errors, please let me know with a screenshot sent via the form on "Contact" page</li>
             </ul>
           </ImportGuideAccordion>
           <ForeFlightCsvUploadCard />
@@ -112,13 +132,9 @@ export default async function ImportPage() {
 
         <section className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-[var(--text)]">MyFlightbook importer</h2>
-          <ImportGuideAccordion title="How to import from MyFlightbook (stub)">
-            <p>Replace this with your final MyFlightbook import guide.</p>
+          <ImportGuideAccordion title="How to import from MyFlightbook">
             <ul className="mt-2 space-y-1">
-              <li>1. Document where users export data from MyFlightbook.</li>
-              <li>2. Explain expected file type and required fields.</li>
-              <li>3. Note any differences versus LogTen/ForeFlight mappings.</li>
-              <li>4. Add troubleshooting and common import errors.</li>
+              <li>(Coming Soon!)</li>
             </ul>
           </ImportGuideAccordion>
           <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--panel-muted)] p-4">
