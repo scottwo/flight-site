@@ -16,7 +16,13 @@ export default async function Home() {
       <div className="mx-auto flex max-w-6xl flex-col gap-12 px-6 py-16">
         <header className="space-y-4">
           <h1 className="text-4xl font-semibold leading-tight text-[var(--text)] sm:text-5xl">
-            Your logbook, but pretty.
+            Your logbook, but{" "}
+            <span className="pretty-word-home">
+              pretty
+              <span className="pretty-spark-home pretty-spark-home-a" aria-hidden="true">*</span>
+              <span className="pretty-spark-home pretty-spark-home-b" aria-hidden="true">+</span>
+              <span className="pretty-spark-home pretty-spark-home-c" aria-hidden="true">*</span>
+            </span>
           </h1>
           <p className="max-w-3xl text-lg text-[var(--muted)]">
             Upload your logbook, pick your style, and publish a polished profile you can share in minutes.
