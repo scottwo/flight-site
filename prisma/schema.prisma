@@ -53,6 +53,9 @@ model Profile {
   handle           String    @unique @db.Citext
   displayName      String
   headline         String?
+  resumeUrl        String?
+  resumePathname   String?
+  resumeFilename   String?
   themeMode        ThemeMode @default(SYSTEM)
   themePrimary     String?
   themeSecondary   String?

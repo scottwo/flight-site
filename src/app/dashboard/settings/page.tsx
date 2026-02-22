@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import DeleteAccountSection from "@/components/DeleteAccountSection";
 import HandleEditor from "@/components/HandleEditor";
 import HeadlineEditor from "@/components/HeadlineEditor";
+import ResumeUploader from "@/components/ResumeUploader";
 import ThemeScope from "@/components/ThemeScope";
 import ThemeSettingsEditor from "@/components/ThemeSettingsEditor";
 import { prisma } from "@/lib/prisma";
@@ -24,6 +25,8 @@ export default async function SettingsPage() {
         select: {
           handle: true,
           headline: true,
+          resumeUrl: true,
+          resumeFilename: true,
           themeMode: true,
           themePrimary: true,
           themeSecondary: true,
@@ -91,6 +94,23 @@ export default async function SettingsPage() {
         <section className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-[var(--text)]">Layout</h2>
           <p className="text-sm text-[var(--muted)]">Toggles for heatmap, map, fun facts (coming soon).</p>
+        </section>
+
+        <section className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-[var(--text)]">Resume</h2>
+          <p className="text-sm text-[var(--muted)]">
+            Upload your resume so visitors can download it from your public profile.
+          </p>
+          {profile ? (
+            <ResumeUploader
+              initialResumeUrl={profile.resumeUrl}
+              initialResumeFilename={profile.resumeFilename}
+            />
+          ) : (
+            <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--panel-muted)] p-4 text-sm text-[var(--muted)]">
+              Loading resume settings...
+            </div>
+          )}
         </section>
 
         <section className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">

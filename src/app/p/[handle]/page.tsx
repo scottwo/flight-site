@@ -323,14 +323,26 @@ export default async function PublicProfilePage({ params }: PageProps) {
               {profile.headline ?? "Headline coming soon."}
             </p>
           </div>
-          {isOwner ? (
-            <Link
-              href="/dashboard/settings"
-              className="rounded-full border border-[var(--border)] bg-[var(--panel-muted)] px-4 py-2 text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--panel)]"
-            >
-              Edit settings
-            </Link>
-          ) : null}
+          <div className="flex flex-wrap items-center gap-2">
+            {profile.resumeUrl ? (
+              <a
+                href={profile.resumeUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-text)] transition hover:opacity-90"
+              >
+                Download resume
+              </a>
+            ) : null}
+            {isOwner ? (
+              <Link
+                href="/dashboard/settings"
+                className="rounded-full border border-[var(--border)] bg-[var(--panel-muted)] px-4 py-2 text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--panel)]"
+              >
+                Edit settings
+              </Link>
+            ) : null}
+          </div>
         </div>
 
         <StatsCards stats={stats} />
