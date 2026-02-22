@@ -13,8 +13,36 @@ import { ensureUserAndProfile } from "@/lib/bootstrapUserProfile";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "MyPilotPage",
-  description: "Create a shareable pilot profile with stats, maps, and currency—powered by your logbook.",
+  metadataBase: new URL("https://www.mypilotpage.com"),
+  title: {
+    default: "MyPilotPage",
+    template: "%s | MyPilotPage",
+  },
+  description:
+    "Upload your logbook, pick your style, and share a polished pilot profile with stats, routes, currency, and recent activity.",
+  openGraph: {
+    type: "website",
+    siteName: "MyPilotPage",
+    url: "https://www.mypilotpage.com",
+    title: "MyPilotPage - Your logbook, beautifully presented",
+    description:
+      "Upload your logbook, pick your style, and share a polished pilot profile with stats, routes, currency, and recent activity.",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "MyPilotPage social preview",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MyPilotPage - Your logbook, beautifully presented",
+    description:
+      "Upload your logbook, pick your style, and share a polished pilot profile with stats, routes, currency, and recent activity.",
+    images: ["/opengraph-image"],
+  },
 };
 
 export default async function RootLayout({

@@ -1,6 +1,7 @@
 export const runtime = "nodejs";
 
 import { auth } from "@clerk/nextjs/server";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -18,8 +19,68 @@ import { prisma } from "@/lib/prisma";
 import { toThemeSettings } from "@/lib/theme";
 
 type PageProps = {
-  params: { handle: string };
+  params: Promise<{ handle: string }>;
 };
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { handle } = await params;
+  if (!handle) {
+    return {
+      title: "Pilot profile",
+    };
+  }
+
+  const profile = await prisma.profile.findUnique({
+    where: { handle },
+    select: {
+      handle: true,
+      displayName: true,
+      headline: true,
+    },
+  });
+
+  if (!profile) {
+    return {
+      title: "Pilot profile",
+      description:
+        "Explore pilot profiles on MyPilotPage with flight stats, route maps, and recency/currency snapshots.",
+    };
+  }
+
+  const title = `${profile.displayName} (@${profile.handle})`;
+  const description =
+    profile.headline?.trim() ||
+    `View ${profile.displayName}'s pilot profile with recent activity, route history, and currency snapshots.`;
+  const imageUrl = `/p/${encodeURIComponent(profile.handle)}/opengraph-image`;
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `/p/${profile.handle}`,
+    },
+    openGraph: {
+      type: "profile",
+      url: `/p/${profile.handle}`,
+      title,
+      description,
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: `${profile.displayName} profile preview`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [imageUrl],
+    },
+  };
+}
 
 function parseFunFacts(raw: unknown): FunFact[] {
   if (!Array.isArray(raw)) return [];
