@@ -38,6 +38,10 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 ## Scott's Notes
 - Run npm run export:logten before deploy
 
+## Product planning
+
+- See [docs/PRODUCT_BACKLOG.md](docs/PRODUCT_BACKLOG.md) for the prioritized product, privacy, UX, and engineering backlog.
+
 ## Airport data seeding (OurAirports)
 - Download the latest `airports.csv` from https://ourairports.com/data/
 - Place it at `data/ourairports/airports.csv` (create the folder if needed). You can keep the dataset untracked.
