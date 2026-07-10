@@ -66,7 +66,7 @@ export async function POST(request: Request) {
             }
           }
           if (clientPayload && typeof clientPayload === "object" && "originalFilename" in clientPayload) {
-            return String((clientPayload as any).originalFilename);
+            return String((clientPayload as Record<string, unknown>).originalFilename);
           }
           return pathname;
         })();
@@ -112,7 +112,7 @@ export async function POST(request: Request) {
             blobUrl: blob.url,
             blobPathname: blob.pathname,
             // Some @vercel/blob versions don't type `size` on PutBlobResult.
-            bytes: (blob as any).size ?? undefined,
+            bytes: (blob as { size?: number }).size,
           },
         });
       },

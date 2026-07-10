@@ -2,6 +2,11 @@
   "name": "flight-site",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "npm@11.3.0",
+  "engines": {
+    "node": ">=22.0.0 <25",
+    "npm": ">=11.0.0 <12"
+  },
   "scripts": {
     "postinstall": "prisma generate",
     "vercel-build": "prisma generate && next build",
@@ -9,12 +14,20 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "typecheck": "tsc --noEmit --incremental false",
+    "prisma:validate": "prisma validate",
+    "check": "npm run lint && npm run typecheck && npm run prisma:validate && npm test",
+    "audit:critical": "npm audit --omit=dev --audit-level=critical",
     "export:logten": "node scripts/export-logten.mjs",
     "gen:demo": "node scripts/generate-demo-data.mjs",
-    "deploy:update": "npm run export:logten && git add public/data && git commit -m \"Update logbook stats\" && git push",
+    "data:refresh": "npm run export:logten",
     "build:airport-index": "node scripts/build-airport-index.mjs",
     "seed:airports": "node scripts/seed-airports.mjs",
-    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test 'src/**/*.test.ts'",
+    "seed:dev": "node --env-file-if-exists=.env scripts/seed-dev.mjs",
+    "test": "node scripts/run-tests.mjs unit",
+    "test:db:prepare": "node --env-file-if-exists=.env scripts/prepare-test-db.mjs",
+    "test:integration": "node --env-file-if-exists=.env scripts/run-tests.mjs integration",
+    "test:all": "npm test && npm run test:integration",
     "lint": "eslint"
   },
   "dependencies": {

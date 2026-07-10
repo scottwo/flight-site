@@ -42,7 +42,6 @@ export default function ForeFlightCsvUploadCard() {
     const fastStatuses = new Set(["UPLOADING", "IMPORTING"]);
     startPolling(fastStatuses.has(job?.status || "") ? 2000 : 20000);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [job?.status]);
 
   const handleFile = async (file: File) => {

@@ -1,0 +1,3 @@
+flight_flightDate	flight_from	flight_to	flight_totalTime	flight_pic	flight_sic	flight_night	flight_crossCountry	flight_ifr	flight_dayLandings	flight_nightLandings	flight_route	flight_remarks	flight_distance	aircraftType_make	aircraftType_model	aircraftType_type	aircraft_aircraftID
+2026-01-15	KDEN	KCOS	1.2	1.2	0	0.3	1.0	0.2	1	0		Synthetic training flight	63	Cessna	172S	C172	N123MP
+2026-01-16	KCOS	KDEN	1.1	1.1	0	0	0.9	0	1	0	KAPA	Synthetic return flight	88	Cessna	172S	C172	N123MP

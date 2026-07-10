@@ -87,14 +87,14 @@ export default async function ImportPage() {
           <ImportGuideAccordion title="How to import from LogTen Pro (Click to Expand)">
             <ul className="mt-2 space-y-1">
               <li>1. (On either Desktop or Mobile) Navigate to the Reports page from the menu</li>
-              <li>2. Click "Exporters"</li>
-              <li>3. Click "Export Flights (Tab)"</li>
-              <li>4. (On Desktop) Click "Generate Report" (On Mobile) Click "Configure Report"</li>
+              <li>2. Click “Exporters”</li>
+              <li>3. Click “Export Flights (Tab)”</li>
+              <li>4. (On Desktop) Click “Generate Report” (On Mobile) Click “Configure Report”</li>
               <li>5. Save somewhere you can retrieve easily</li>
-              <li>6. Click "Choose file" button under "LogTen TSV Importer" on this page</li>
-              <li>7. Find saved export from LogTenPro and click "Upload"</li>
-              <li>8. Once upload is complete, click "Import Now" button</li>
-              <li>9. If there are errors, please let me know with a screenshot sent via the form on "Contact" page</li>
+              <li>6. Click “Choose file” under “LogTen TSV importer” on this page</li>
+              <li>7. Find the saved export from LogTen Pro and click “Upload”</li>
+              <li>8. Once upload is complete, click “Import Now”</li>
+              <li>9. If there are errors, send a screenshot through the “Contact” page</li>
             </ul>
           </ImportGuideAccordion>
           <LogTenTsvUploadCard />
@@ -105,26 +105,26 @@ export default async function ImportPage() {
           <ImportGuideAccordion title="How to import from ForeFlight (Click to Expand)">
             <p><b>Desktop</b></p>
             <ul className="mt-2 space-y-1">
-              <li>1. Log in to ForeFlight and nagivate to Logbook</li>
-              <li>2. Click "Export" on the top menu</li>
-              <li>3. Click "Export" on the page and wait for the CSV to download</li>
-              <li>4. Click "Choose file" button under "ForeFlight CSV importer" on this page</li>
-              <li>5. Find saved export from ForeFlight and click "Upload"</li>
-              <li>6. Once upload is complete, click "Import Now" button</li>
-              <li>7. If there are errors, please let me know with a screenshot sent via the form on "Contact" page</li>
+              <li>1. Log in to ForeFlight and navigate to Logbook</li>
+              <li>2. Click “Export” on the top menu</li>
+              <li>3. Click “Export” on the page and wait for the CSV to download</li>
+              <li>4. Click “Choose file” under “ForeFlight CSV importer” on this page</li>
+              <li>5. Find the saved export from ForeFlight and click “Upload”</li>
+              <li>6. Once upload is complete, click “Import Now”</li>
+              <li>7. If there are errors, send a screenshot through the “Contact” page</li>
             </ul>
             <p><b>Mobile</b></p>
             <ul className="mt-2 space-y-1">
               <li>1. Open ForeFlight app</li>
-              <li>2. Navigate to Logbook on the menu (might need to click "More")</li>
-              <li>3. Click "Settings" at the bottom of the menu</li>
-              <li>4. Scroll down to the "Auto-Export" option</li>
-              <li>5. Enable (if not already enabled) and click "Export Now" (This will send you an email with the CSV attached)</li>
+              <li>2. Navigate to Logbook on the menu (you may need to click “More”)</li>
+              <li>3. Click “Settings” at the bottom of the menu</li>
+              <li>4. Scroll down to the “Auto-Export” option</li>
+              <li>5. Enable it if needed and click “Export Now” to receive an email with the CSV attached</li>
               <li>6. Download the CSV from the email</li>
-              <li>7. Click "Choose file" button under "ForeFlight CSV importer" on this page</li>
-              <li>8. Find saved export from ForeFlight and click "Upload"</li>
-              <li>9. Once upload is complete, click "Import Now" button</li>
-              <li>10. If there are errors, please let me know with a screenshot sent via the form on "Contact" page</li>
+              <li>7. Click “Choose file” under “ForeFlight CSV importer” on this page</li>
+              <li>8. Find the saved export from ForeFlight and click “Upload”</li>
+              <li>9. Once upload is complete, click “Import Now”</li>
+              <li>10. If there are errors, send a screenshot through the “Contact” page</li>
             </ul>
           </ImportGuideAccordion>
           <ForeFlightCsvUploadCard />

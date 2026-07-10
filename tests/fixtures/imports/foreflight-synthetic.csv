@@ -1,0 +1,3 @@
+Date,AircraftID,From,To,Route,PilotComments,TotalTime,PIC,SIC,Night,CrossCountry,IFR,DayLandingsFullStop,NightLandingsFullStop
+2026-01-15,N456MP,KDEN,KCOS,,Synthetic training flight,1.2,1.2,0,0.3,1.0,0.2,1,0
+2026-01-16,N456MP,KCOS,KDEN,KAPA,Synthetic return flight,1.1,1.1,0,0,0.9,0,1,0

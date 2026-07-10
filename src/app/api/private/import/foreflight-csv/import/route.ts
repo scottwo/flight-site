@@ -408,8 +408,8 @@ export async function POST(req: Request) {
         {
           fromIcao: f.fromIcao,
           toIcao: f.toIcao,
-          route: (f as any).route ?? null,
-          remarks: (f as any).remarks ?? null,
+          route: f.route,
+          remarks: f.remarks,
         },
         knownAirportCodes,
         missingAirportCodes,
