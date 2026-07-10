@@ -9,7 +9,7 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
+  provider = "postgresql"
 }
 
 enum ImportProvider {
@@ -39,36 +39,36 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  profile     Profile?
-  importJobs  ImportJob[]
-  flights     Flight[]
-  stats       ProfileStats?
+  profile       Profile?
+  importJobs    ImportJob[]
+  flights       Flight[]
+  stats         ProfileStats?
   flightDayAggs FlightDayAgg[]
-  routeAggs   RouteAgg[]
+  routeAggs     RouteAgg[]
 }
 
 model Profile {
-  userId           String    @id
-  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  handle           String    @unique @db.Citext
-  displayName      String
-  headline         String?
-  resumeUrl        String?
-  resumePathname   String?
-  resumeFilename   String?
-  themeMode        ThemeMode @default(SYSTEM)
-  themePrimary     String?
-  themeSecondary   String?
-  themeGuardrails  Boolean   @default(true)
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  userId          String    @id
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  handle          String    @unique @db.Citext
+  displayName     String
+  headline        String?
+  resumeUrl       String?
+  resumePathname  String?
+  resumeFilename  String?
+  themeMode       ThemeMode @default(SYSTEM)
+  themePrimary    String?
+  themeSecondary  String?
+  themeGuardrails Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
 
 model ImportJob {
-  id               String        @id @default(cuid())
-  userId           String
-  provider         ImportProvider
-  status           ImportStatus  @default(UPLOADING)
+  id       String         @id @default(cuid())
+  userId   String
+  provider ImportProvider
+  status   ImportStatus   @default(UPLOADING)
 
   originalFilename String?
   blobUrl          String?
@@ -76,19 +76,19 @@ model ImportJob {
   bytes            Int?
   importedCount    Int?
 
-  startedAt         DateTime?
-  finishedAt        DateTime?
+  startedAt  DateTime?
+  finishedAt DateTime?
 
   missingAirportCodes String[] @default([])
-  warnings             Json?
+  warnings            Json?
 
-  error            String?
+  error String?
 
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  flights           Flight[]
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  flights Flight[]
 
   @@index([userId, createdAt])
 }
@@ -102,20 +102,34 @@ model Airport {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  departures Flight[] @relation("depAirport")
-  arrivals   Flight[] @relation("arrAirport")
+  departures Flight[]       @relation("depAirport")
+  arrivals   Flight[]       @relation("arrAirport")
+  aliases    AirportAlias[]
+}
+
+model AirportAlias {
+  id        String  @id @default(cuid())
+  code      String  @unique @db.Citext
+  kind      String
+  airportId String
+  airport   Airport @relation(fields: [airportId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([airportId])
 }
 
 model Flight {
-  id            String   @id @default(cuid())
-  userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  importJobId   String?
-  importJob     ImportJob? @relation(fields: [importJobId], references: [id], onDelete: SetNull)
+  importJobId String?
+  importJob   ImportJob? @relation(fields: [importJobId], references: [id], onDelete: SetNull)
 
-  provider      ImportProvider? // where this row came from
-  sourceId      String?         // provider-specific unique id if available (future)
+  provider ImportProvider? // where this row came from
+  sourceId String? // provider-specific unique id if available (future)
 
   flightDate    DateTime
   fromIcao      String   @db.Citext
@@ -134,16 +148,17 @@ model Flight {
   dayLandings   Int?
   nightLandings Int?
 
-  route         String?
-  remarks       String?
+  route      String?
+  remarks    String?
+  distanceNm Float?
 
   aircraftMake  String?
   aircraftModel String?
   aircraftType  String?
   tailNumber    String?
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId, flightDate])
   @@index([userId, fromIcao, toIcao])
@@ -151,33 +166,33 @@ model Flight {
 }
 
 model ProfileStats {
-  id            String   @id @default(cuid())
-  userId        String   @unique
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  totalTime     Float @default(0)
-  pic           Float @default(0)
-  sic           Float @default(0)
-  night         Float @default(0)
-  crossCountry  Float @default(0)
-  ifr           Float @default(0)
+  totalTime    Float @default(0)
+  pic          Float @default(0)
+  sic          Float @default(0)
+  night        Float @default(0)
+  crossCountry Float @default(0)
+  ifr          Float @default(0)
 
   last90_total    Float @default(0)
   last90_landings Int   @default(0)
   last90_ifr      Float @default(0)
 
-  flightsCount    Int   @default(0)
-  landingsTotal   Int   @default(0)
+  flightsCount  Int @default(0)
+  landingsTotal Int @default(0)
 
-  funFacts        Json?
+  funFacts Json?
 
-  updatedAt     DateTime @updatedAt
+  updatedAt DateTime @updatedAt
 }
 
 model FlightDayAgg {
-  id           String   @id @default(cuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   day          DateTime // UTC day boundary (00:00:00Z)
   flightsCount Int      @default(0)
@@ -189,25 +204,25 @@ model FlightDayAgg {
   ifr          Float    @default(0)
   landings     Int      @default(0)
 
-  updatedAt    DateTime @updatedAt
+  updatedAt DateTime @updatedAt
 
   @@unique([userId, day])
   @@index([userId, day])
 }
 
 model RouteAgg {
-  id           String   @id @default(cuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  fromIcao     String   @db.Citext
-  toIcao       String   @db.Citext
+  fromIcao String @db.Citext
+  toIcao   String @db.Citext
 
-  flightsCount Int      @default(0)
-  totalTime    Float    @default(0)
+  flightsCount Int       @default(0)
+  totalTime    Float     @default(0)
   lastFlownAt  DateTime?
 
-  updatedAt    DateTime @updatedAt
+  updatedAt DateTime @updatedAt
 
   @@unique([userId, fromIcao, toIcao])
   @@index([userId, fromIcao, toIcao])
