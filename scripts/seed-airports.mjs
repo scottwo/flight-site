@@ -94,71 +94,125 @@ async function main() {
     bom: true,
   });
 
-  let inserted = 0;
-  let updated = 0;
-  let skipped = 0;
+  const canonicalCodes = new Set();
+  const aliasTargets = new Map();
+  const airportDataByCanonical = new Map();
+  let invalidRecords = 0;
 
   for (const row of records) {
-    const rawCode = (row.gps_code || row.ident || row.iata_code || row.local_code || "").trim();
-    if (!rawCode) {
-      skipped += 1;
-      continue;
-    }
-    const icao = rawCode.toUpperCase();
-    const name = (row.name || "").trim() || null;
+    const canonical = (row.gps_code || row.ident || row.iata_code || row.local_code || "")
+      .trim()
+      .toUpperCase();
     const lat = Number.parseFloat(row.latitude_deg);
     const lon = Number.parseFloat(row.longitude_deg);
-    const hasLat = Number.isFinite(lat);
-    const hasLon = Number.isFinite(lon);
-    if (!hasLat || !hasLon) {
-      skipped += 1;
+    if (!canonical || !Number.isFinite(lat) || !Number.isFinite(lon)) {
+      invalidRecords += 1;
       continue;
     }
 
-    const existing = await prisma.airport.findUnique({
-      where: { icao },
-      select: { id: true, name: true, lat: true, lon: true },
+    canonicalCodes.add(canonical);
+    airportDataByCanonical.set(canonical, {
+      icao: canonical,
+      name: (row.name || "").trim() || null,
+      lat,
+      lon,
     });
 
-    if (!existing) {
-      await prisma.airport.create({
-        data: {
-          icao,
-          name,
-          lat: hasLat ? lat : null,
-          lon: hasLon ? lon : null,
-        },
-      });
-      inserted += 1;
-      continue;
+    const aliases = [
+      ["GPS", row.gps_code],
+      ["IDENT", row.ident],
+      ["IATA", row.iata_code],
+      ["LOCAL", row.local_code],
+    ];
+    for (const [kind, value] of aliases) {
+      const code = (value || "").trim().toUpperCase();
+      if (!code || code === canonical) continue;
+      const targets = aliasTargets.get(code) || new Map();
+      if (!targets.has(canonical)) targets.set(canonical, kind);
+      aliasTargets.set(code, targets);
     }
-
-    const updateData = {};
-    if (name && name !== existing.name) {
-      updateData.name = name;
-    }
-    if (hasLat && (existing.lat === null || existing.lat === undefined)) {
-      updateData.lat = lat;
-    }
-    if (hasLon && (existing.lon === null || existing.lon === undefined)) {
-      updateData.lon = lon;
-    }
-
-    if (Object.keys(updateData).length === 0) {
-      skipped += 1;
-      continue;
-    }
-
-    await prisma.airport.update({
-      where: { icao },
-      data: updateData,
-    });
-    updated += 1;
   }
 
-  console.log(
-    `Seeding complete. Inserted: ${inserted}, Updated: ${updated}, Skipped: ${skipped}, Total processed: ${records.length}`,
+  const existingAirports = await prisma.airport.findMany({
+    select: { icao: true, name: true, lat: true, lon: true },
+  });
+  const existingByCanonical = new Map(existingAirports.map((airport) => [airport.icao.toUpperCase(), airport]));
+  const airportsToCreate = [];
+  const airportsToUpdate = [];
+  let unchanged = 0;
+
+  for (const airport of airportDataByCanonical.values()) {
+    const existing = existingByCanonical.get(airport.icao);
+    if (!existing) {
+      airportsToCreate.push(airport);
+      continue;
+    }
+
+    const data = {};
+    if (airport.name && airport.name !== existing.name) data.name = airport.name;
+    if (existing.lat === null) data.lat = airport.lat;
+    if (existing.lon === null) data.lon = airport.lon;
+    if (Object.keys(data).length) airportsToUpdate.push({ icao: airport.icao, data });
+    else unchanged += 1;
+  }
+
+  for (let start = 0; start < airportsToCreate.length; start += 1000) {
+    await prisma.airport.createMany({
+      data: airportsToCreate.slice(start, start + 1000),
+      skipDuplicates: true,
+    });
+  }
+
+  // Updates are usually a small subset. Run them in bounded parallel batches
+  // instead of one network round-trip for every airport in the source file.
+  for (let start = 0; start < airportsToUpdate.length; start += 100) {
+    await Promise.all(
+      airportsToUpdate.slice(start, start + 100).map(({ icao, data }) =>
+        prisma.airport.update({
+          where: { icao },
+          data,
+        }),
+      ),
+    );
+  }
+
+  const seededAirports = await prisma.airport.findMany({ select: { id: true, icao: true } });
+  const airportIdByCanonical = new Map(
+    seededAirports.map((airport) => [airport.icao.toUpperCase(), airport.id]),
   );
+
+  const aliasesToCreate = [];
+  let ambiguousAliases = 0;
+  for (const [code, targets] of aliasTargets) {
+    // A local identifier can be reused in multiple countries. Only globally
+    // unambiguous aliases are safe for automatic route reconstruction.
+    if (targets.size !== 1 || canonicalCodes.has(code)) {
+      ambiguousAliases += 1;
+      continue;
+    }
+    const [[canonical, kind]] = targets.entries();
+    const airportId = airportIdByCanonical.get(canonical);
+    if (!airportId) continue;
+    aliasesToCreate.push({ code, kind, airportId });
+  }
+
+  await prisma.$transaction(
+    async (tx) => {
+      await tx.airportAlias.deleteMany();
+      for (let start = 0; start < aliasesToCreate.length; start += 1000) {
+        await tx.airportAlias.createMany({
+          data: aliasesToCreate.slice(start, start + 1000),
+          skipDuplicates: true,
+        });
+      }
+    },
+    { timeout: 120_000 },
+  );
+
+  console.log(
+    `Seeding complete. Inserted: ${airportsToCreate.length}, Updated: ${airportsToUpdate.length}, Unchanged: ${unchanged}, Invalid: ${invalidRecords}, Total processed: ${records.length}`,
+  );
+  console.log(`Airport aliases: ${aliasesToCreate.length}; ambiguous aliases skipped: ${ambiguousAliases}`);
   const missingCoords = await prisma.airport.count({
     where: {
       OR: [{ lat: null }, { lon: null }],

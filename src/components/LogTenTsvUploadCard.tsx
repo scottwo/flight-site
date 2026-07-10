@@ -13,7 +13,12 @@ type Job = {
   error: string | null;
   importedCount?: number | null;
   missingAirportCodes?: string[] | null;
-  warnings?: any;
+  warnings?: {
+    missingAirportCodes?: string[];
+    missingCount?: number;
+    routeDistanceMismatchCount?: number;
+    skippedRows?: number;
+  } | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -43,7 +48,6 @@ export default function LogTenTsvUploadCard() {
     const fastStatuses = new Set(["UPLOADING", "IMPORTING"]);
     startPolling(fastStatuses.has(job?.status || "") ? 2000 : 20000);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [job?.status]);
 
   const handleFile = async (file: File) => {
@@ -60,7 +64,7 @@ export default function LogTenTsvUploadCard() {
 
     setLoading(true);
     try {
-      const res = await upload(file.name, file, {
+      await upload(file.name, file, {
         access: "public",
         handleUploadUrl: "/api/private/import/logten-tsv/upload",
         contentType: file.type,
@@ -124,6 +128,9 @@ export default function LogTenTsvUploadCard() {
     }
   };
 
+  const routeDistanceMismatchCount = job?.warnings?.routeDistanceMismatchCount ?? 0;
+  const skippedRows = job?.warnings?.skippedRows ?? 0;
+
   return (
     <div className="rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
       <div className="flex items-center justify-between gap-3">
@@ -170,7 +177,7 @@ export default function LogTenTsvUploadCard() {
             {job.status === "SUCCEEDED" && job.missingAirportCodes && job.missingAirportCodes.length > 0 && (
               <div className="mt-3 rounded-xl border border-yellow-300 bg-yellow-50/70 p-3 text-[var(--text)]">
                 <p className="text-sm font-semibold text-yellow-800">
-                  Some airports in routes/remarks were not recognized and were skipped for mapping.
+                  Some endpoint or route-field airports were not recognized and were skipped for mapping.
                 </p>
                 <p className="text-xs text-yellow-900">
                   {job.missingAirportCodes.slice(0, 10).join(", ")}
@@ -179,6 +186,19 @@ export default function LogTenTsvUploadCard() {
                     : ""}
                 </p>
               </div>
+            )}
+            {job.status === "SUCCEEDED" && routeDistanceMismatchCount > 0 && (
+              <p className="text-xs text-yellow-800">
+                {routeDistanceMismatchCount} route
+                {routeDistanceMismatchCount === 1 ? " was" : "s were"} simplified because the reconstructed
+                distance did not match LogTen.
+              </p>
+            )}
+            {job.status === "SUCCEEDED" && skippedRows > 0 && (
+              <p className="text-xs text-yellow-800">
+                {skippedRows} row{skippedRows === 1 ? " was" : "s were"} skipped because a date, departure, or
+                arrival was missing.
+              </p>
             )}
           </div>
           {job.status === "UPLOADED" && (

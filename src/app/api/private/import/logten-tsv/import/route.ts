@@ -1,8 +1,14 @@
 import { auth } from "@clerk/nextjs/server";
 import { del } from "@vercel/blob";
 import { Prisma } from "@prisma/client";
+import { parse } from "csv-parse/sync";
 import { NextResponse } from "next/server";
 
+import {
+  buildAirportRouteLegs,
+  tokenizeAirportRoute,
+  type ResolvedAirport,
+} from "@/lib/import/routeLegs";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
@@ -31,93 +37,6 @@ const parseDate = (value?: string | null) => {
   return Number.isNaN(d.getTime()) ? null : d;
 };
 
-// LogTen route/remarks strings can contain a mixture of ICAO and FAA identifiers.
-// We mine those to recover individual route legs for map/route aggregates.
-const ICAO_RE = /\b[A-Z]{4}\b/g;
-const FAA_LID_RE = /\b[A-Z]{1,2}\d{1,3}\b/g;
-
-function extractAirportCodes(text: string | null | undefined): string[] {
-  if (!text) return [];
-  const upper = text.toUpperCase();
-  const hits: string[] = [];
-  for (const m of upper.matchAll(ICAO_RE)) hits.push(m[0]);
-  for (const m of upper.matchAll(FAA_LID_RE)) hits.push(m[0]);
-  // de-dupe while preserving order
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const h of hits) {
-    if (!seen.has(h)) {
-      seen.add(h);
-      out.push(h);
-    }
-  }
-  return out;
-}
-
-function buildLegsForFlight(
-  f: {
-    fromIcao: string;
-    toIcao: string;
-    route: string | null;
-    remarks: string | null;
-  },
-  knownAirportCodes?: Set<string>,
-  missing?: Set<string>,
-): Array<{ fromIcao: string; toIcao: string }> {
-  const from = (f.fromIcao || "").toUpperCase();
-  const to = (f.toIcao || "").toUpperCase();
-
-  // Prefer explicit route field ordering; fall back to remarks ordering.
-  const viaRaw = extractAirportCodes(f.route);
-  const viaFallback = extractAirportCodes(f.remarks);
-  const viaCandidates = viaRaw.length ? viaRaw : viaFallback;
-
-  // Filter to known airports if provided; collect missing codes so the UI can
-  // surface why some legs are not represented on the map.
-  const filterKnown = (code: string) => {
-    if (!knownAirportCodes) return true;
-    const ok = knownAirportCodes.has(code);
-    if (!ok && missing) missing.add(code);
-    return ok;
-  };
-
-  if (knownAirportCodes) {
-    if (!filterKnown(from) || !filterKnown(to)) return [];
-  }
-
-  const via = viaCandidates.filter(filterKnown);
-
-  // Remove endpoints if they appear in the middle list.
-  const cleanedVia = via.filter((c) => c !== from && c !== to);
-
-  // If there are no extracted airports, just return the direct leg.
-  if (!cleanedVia.length) {
-    return from && to ? [{ fromIcao: from, toIcao: to }] : [];
-  }
-
-  // If from==to (common in Scott's logbook), assume out-and-back visiting the listed airports in order.
-  if (from === to) {
-    const seq = [from, ...cleanedVia, from];
-    const legs: Array<{ fromIcao: string; toIcao: string }> = [];
-    for (let i = 0; i < seq.length - 1; i++) {
-      if (seq[i] && seq[i + 1] && seq[i] !== seq[i + 1]) {
-        legs.push({ fromIcao: seq[i], toIcao: seq[i + 1] });
-      }
-    }
-    return legs;
-  }
-
-  // Otherwise, assume from -> (via...) -> to.
-  const seq = [from, ...cleanedVia, to];
-  const legs: Array<{ fromIcao: string; toIcao: string }> = [];
-  for (let i = 0; i < seq.length - 1; i++) {
-    if (seq[i] && seq[i + 1] && seq[i] !== seq[i + 1]) {
-      legs.push({ fromIcao: seq[i], toIcao: seq[i + 1] });
-    }
-  }
-  return legs;
-}
-
 export async function POST(req: Request) {
   const { userId: clerkUserId } = await auth();
   if (!clerkUserId) {
@@ -137,10 +56,19 @@ export async function POST(req: Request) {
 
   const job = jobId
     ? await prisma.importJob.findFirst({
-        where: { id: jobId, userId: internalUser.id, status: "UPLOADED" },
+        where: {
+          id: jobId,
+          userId: internalUser.id,
+          status: "UPLOADED",
+          provider: "LOGTEN_TSV",
+        },
       })
     : await prisma.importJob.findFirst({
-        where: { userId: internalUser.id, status: "UPLOADED" },
+        where: {
+          userId: internalUser.id,
+          status: "UPLOADED",
+          provider: "LOGTEN_TSV",
+        },
         orderBy: { createdAt: "desc" },
       });
 
@@ -151,7 +79,7 @@ export async function POST(req: Request) {
   // Move job to IMPORTING as early as possible to avoid duplicate concurrent runs.
   await prisma.importJob.update({
     where: { id: job.id },
-    data: { status: "IMPORTING", error: null },
+    data: { status: "IMPORTING", error: null, startedAt: new Date() },
   });
 
   try {
@@ -159,184 +87,174 @@ export async function POST(req: Request) {
     if (!tsvRes.ok) throw new Error(`Blob fetch failed: ${tsvRes.status}`);
     const text = await tsvRes.text();
 
-    // LogTen TSV exports are not strict row sets: metadata and freeform text can
-    // be interleaved. We keep only rows that begin with a date token and then
-    // index fields by header name.
+    // Find the actual flight header rather than assuming the first non-empty
+    // line is the header. LogTen may include other report content around it.
     const lines = text.replace(/\r\n/g, "\n").split("\n");
-    const headerLine = lines.find((l) => l.trim().length > 0);
-    if (!headerLine) throw new Error("Empty TSV");
-
-    const headers = headerLine.split("\t").map((h) => h.trim());
-    const colIndex = new Map<string, number>();
-    headers.forEach((h, i) => colIndex.set(h, i));
-
-    const idx = (name: string) => colIndex.get(name) ?? -1;
-
-    const iFlightDate = idx("flight_flightDate");
-    const iFrom = idx("flight_from");
-    const iTo = idx("flight_to");
-
-    if (iFlightDate < 0 || iFrom < 0 || iTo < 0) {
-      throw new Error(
-        `Missing required columns: flight_flightDate=${iFlightDate}, flight_from=${iFrom}, flight_to=${iTo}`
+    const headerIndex = lines.findIndex((line) => {
+      const headers = new Set(line.split("\t").map((header) => header.trim()));
+      return (
+        headers.has("flight_flightDate") &&
+        headers.has("flight_from") &&
+        headers.has("flight_to")
       );
-    }
-
-    const flightLines: string[] = [];
-    const dateRowRe = /^\s*\d{4}-\d{2}-\d{2}(\t|$)/;
-    let sawHeader = false;
-
-    for (const line of lines) {
-      if (!sawHeader) {
-        if (line === headerLine) sawHeader = true;
-        continue;
-      }
-      if (!line || !line.trim()) continue;
-      if (!dateRowRe.test(line)) continue;
-      flightLines.push(line);
-    }
-
-    console.log("logten import parsed flight lines", {
-      totalLines: lines.length,
-      flightLineCount: flightLines.length,
-      firstSample: flightLines.slice(0, 3).map((l) => l.slice(0, 80)),
     });
+    if (headerIndex < 0) throw new Error("LogTen flight header row not found");
 
-    const icaos = new Set<string>();
+    const records = parse(lines.slice(headerIndex).join("\n"), {
+      delimiter: "\t",
+      columns: (headers) => headers.map((header) => header.trim()),
+      skip_empty_lines: true,
+      relax_quotes: true,
+      relax_column_count: true,
+      bom: true,
+      trim: true,
+    }) as Record<string, string>[];
 
-    const get = (fields: string[], name: string) => {
-      const i = idx(name);
-      return i >= 0 ? (fields[i] ?? "") : "";
-    };
+    let skippedRows = 0;
+    const flightRecords = records.filter((record) =>
+      /^\d{4}-\d{2}-\d{2}$/.test(record.flight_flightDate ?? ""),
+    );
 
-    const flightsToCreate: Prisma.FlightCreateManyInput[] = flightLines
-      .map((line): Prisma.FlightCreateManyInput | null => {
-        const fields = line.split("\t");
-
-        const flightDate = parseDate(get(fields, "flight_flightDate"));
-        const fromIcaoRaw = get(fields, "flight_from").trim();
-        const toIcaoRaw = get(fields, "flight_to").trim();
+    const get = (record: Record<string, string>, name: string) => record[name] ?? "";
+    const flightsToCreate: Prisma.FlightCreateManyInput[] = flightRecords
+      .map((record): Prisma.FlightCreateManyInput | null => {
+        const flightDate = parseDate(get(record, "flight_flightDate"));
+        const fromIcaoRaw = get(record, "flight_from").trim();
+        const toIcaoRaw = get(record, "flight_to").trim();
         const fromIcao = fromIcaoRaw.toUpperCase();
         const toIcao = toIcaoRaw.toUpperCase();
 
         if (!flightDate || !fromIcao || !toIcao) {
-          console.log("skipping row", {
-            flight_flightDate: get(fields, "flight_flightDate"),
-            flight_from: get(fields, "flight_from"),
-            flight_to: get(fields, "flight_to"),
-            raw: line.slice(0, 200),
-          });
+          skippedRows += 1;
           return null;
         }
 
-        icaos.add(fromIcao);
-        icaos.add(toIcao);
-
         return {
           userId: internalUser.id,
+          importJobId: job.id,
+          provider: "LOGTEN_TSV",
           flightDate,
-          totalTime: parseFloatSafe(get(fields, "flight_totalTime")),
-          pic: parseFloatSafe(get(fields, "flight_pic")),
-          sic: parseFloatSafe(get(fields, "flight_sic")),
-          night: parseFloatSafe(get(fields, "flight_night")),
-          crossCountry: parseFloatSafe(get(fields, "flight_crossCountry")),
-          ifr: parseFloatSafe(get(fields, "flight_ifr")),
-          dayLandings: parseIntSafe(get(fields, "flight_dayLandings")) ?? 0,
-          nightLandings: parseIntSafe(get(fields, "flight_nightLandings")) ?? 0,
-          route: get(fields, "flight_route") || null,
-          remarks: get(fields, "flight_remarks") || null,
-          aircraftMake: get(fields, "aircraftType_make") || null,
-          aircraftModel: get(fields, "aircraftType_model") || null,
-          aircraftType: get(fields, "aircraftType_type") || null,
-          tailNumber: get(fields, "aircraft_aircraftID") || null,
+          totalTime: parseFloatSafe(get(record, "flight_totalTime")),
+          pic: parseFloatSafe(get(record, "flight_pic")),
+          sic: parseFloatSafe(get(record, "flight_sic")),
+          night: parseFloatSafe(get(record, "flight_night")),
+          crossCountry: parseFloatSafe(get(record, "flight_crossCountry")),
+          ifr: parseFloatSafe(get(record, "flight_ifr")),
+          dayLandings: parseIntSafe(get(record, "flight_dayLandings")) ?? 0,
+          nightLandings: parseIntSafe(get(record, "flight_nightLandings")) ?? 0,
+          route: get(record, "flight_route") || null,
+          remarks: get(record, "flight_remarks") || null,
+          distanceNm: parseFloatSafe(get(record, "flight_distance")),
+          aircraftMake: get(record, "aircraftType_make") || null,
+          aircraftModel: get(record, "aircraftType_model") || null,
+          aircraftType: get(record, "aircraftType_type") || null,
+          tailNumber: get(record, "aircraft_aircraftID") || null,
           fromIcao,
           toIcao,
         };
       })
       .filter((v): v is Prisma.FlightCreateManyInput => v !== null);
 
-    const airportMap = new Map<string, string>();
-    const knownAirportCodes = new Set<string>();
     const missingAirportCodes = new Set<string>();
-
-    // Current strategy is full replace on each import for deterministic aggregates.
-    // This keeps import behavior simple until we add provider-level dedupe/upsert.
-    await prisma.flight.deleteMany({ where: { userId: internalUser.id } });
-
-    // Scan route/remarks for airport-like tokens to support multi-leg reconstruction.
-    // Airports are lookup-only: unknown codes are tracked, not inserted.
-    const extractedCandidates = new Set<string>();
+    const lookupCodes = new Set<string>();
     flightsToCreate.forEach((f) => {
-      const candidates: string[] = [];
-      if (f.route) {
-        const upper = f.route.toUpperCase();
-        candidates.push(...(upper.match(ICAO_RE) || []));
-        candidates.push(...(upper.match(FAA_LID_RE) || []));
-      }
-      if (f.remarks) {
-        const upper = f.remarks.toUpperCase();
-        candidates.push(...(upper.match(ICAO_RE) || []));
-        candidates.push(...(upper.match(FAA_LID_RE) || []));
-      }
-      candidates.forEach((c) => extractedCandidates.add(c));
+      lookupCodes.add(f.fromIcao.toUpperCase());
+      lookupCodes.add(f.toIcao.toUpperCase());
+      tokenizeAirportRoute(f.route).forEach((code) => lookupCodes.add(code));
     });
 
-    const lookupCodes = Array.from(new Set([...icaos, ...extractedCandidates]));
-    if (lookupCodes.length) {
-      const found = await prisma.airport.findMany({
-        where: { icao: { in: lookupCodes } },
-        select: { id: true, icao: true },
+    const codeList = Array.from(lookupCodes);
+    const resolvedAirportByCode = new Map<string, ResolvedAirport>();
+    if (codeList.length) {
+      const airports = await prisma.airport.findMany({
+        where: {
+          icao: { in: codeList },
+          lat: { not: null },
+          lon: { not: null },
+        },
+        select: { id: true, icao: true, lat: true, lon: true },
       });
-      found.forEach((apt) => {
-        airportMap.set(apt.icao, apt.id);
-        knownAirportCodes.add(apt.icao);
+      airports.forEach((airport) => {
+        resolvedAirportByCode.set(airport.icao.toUpperCase(), {
+          code: airport.icao.toUpperCase(),
+          airportId: airport.id,
+          lat: airport.lat!,
+          lon: airport.lon!,
+        });
       });
-      lookupCodes.forEach((code) => {
-        if (!knownAirportCodes.has(code)) missingAirportCodes.add(code);
+
+      const aliases = await prisma.airportAlias.findMany({
+        where: { code: { in: codeList } },
+        select: {
+          code: true,
+          airport: { select: { id: true, icao: true, lat: true, lon: true } },
+        },
+      });
+      aliases.forEach(({ code, airport }) => {
+        if (airport.lat === null || airport.lon === null) return;
+        const resolved = {
+          code: airport.icao.toUpperCase(),
+          airportId: airport.id,
+          lat: airport.lat,
+          lon: airport.lon,
+        } satisfies ResolvedAirport;
+        resolvedAirportByCode.set(code.toUpperCase(), resolved);
+        resolvedAirportByCode.set(resolved.code, resolved);
       });
     }
 
+    const resolveAirport = (code: string) => resolvedAirportByCode.get(code.trim().toUpperCase());
     const flightsWithIds = flightsToCreate.map((f) => {
-      if (!airportMap.has(f.fromIcao)) missingAirportCodes.add(f.fromIcao);
-      if (!airportMap.has(f.toIcao)) missingAirportCodes.add(f.toIcao);
+      const fromAirport = resolveAirport(f.fromIcao);
+      const toAirport = resolveAirport(f.toIcao);
+      if (!fromAirport) missingAirportCodes.add(f.fromIcao.toUpperCase());
+      if (!toAirport) missingAirportCodes.add(f.toIcao.toUpperCase());
       return {
         ...f,
-        fromAirportId: airportMap.get(f.fromIcao) ?? null,
-        toAirportId: airportMap.get(f.toIcao) ?? null,
+        fromIcao: fromAirport?.code ?? f.fromIcao.toUpperCase(),
+        toIcao: toAirport?.code ?? f.toIcao.toUpperCase(),
+        fromAirportId: fromAirport?.airportId ?? null,
+        toAirportId: toAirport?.airportId ?? null,
       };
     });
 
-    if (flightsWithIds.length) {
-      await prisma.flight.createMany({ data: flightsWithIds });
-    }
+    let routeDistanceMismatchCount = 0;
+    await prisma.$transaction(async (tx) => {
+      // Imports replace the active logbook, but the replacement and all derived
+      // aggregates now commit atomically so a failure preserves the prior data.
+      await tx.flight.deleteMany({ where: { userId: internalUser.id } });
+      if (flightsWithIds.length) {
+        await tx.flight.createMany({ data: flightsWithIds });
+      }
 
-    const flights = await prisma.flight.findMany({
-      where: { userId: internalUser.id },
-      select: {
-        flightDate: true,
-        fromIcao: true,
-        toIcao: true,
-        totalTime: true,
-        pic: true,
-        sic: true,
-        night: true,
-        crossCountry: true,
-        ifr: true,
-        dayLandings: true,
-        nightLandings: true,
-        route: true,
-        remarks: true,
-      },
-    });
-    const nonLocal = flights.filter((f) => f.fromIcao !== f.toIcao).length;
-    const distinctRoutes = Array.from(
-      new Set(flights.map((f) => `${f.fromIcao ?? "??"}->${f.toIcao ?? "??"}`)),
-    ).slice(0, 10);
-    console.log("import summary", { total: flights.length, nonLocal, sampleRoutes: distinctRoutes });
+      const flights = await tx.flight.findMany({
+        where: { userId: internalUser.id },
+        select: {
+          flightDate: true,
+          fromIcao: true,
+          toIcao: true,
+          totalTime: true,
+          pic: true,
+          sic: true,
+          night: true,
+          crossCountry: true,
+          ifr: true,
+          dayLandings: true,
+          nightLandings: true,
+          route: true,
+          distanceNm: true,
+        },
+      });
 
-    const now = new Date();
-    const cutoff90 = new Date(now);
-    cutoff90.setDate(cutoff90.getDate() - 90);
+      console.log("logten import summary", {
+        imported: flights.length,
+        skippedRows,
+        routesProvided: flights.filter((flight) => flight.route).length,
+      });
+
+      const now = new Date();
+      const cutoff90 = new Date(now);
+      cutoff90.setDate(cutoff90.getDate() - 90);
 
     // ProfileStats are persisted denormalized totals for fast public page loads.
     const totals = flights.reduce(
@@ -372,7 +290,7 @@ export async function POST(req: Request) {
       { totalTime: 0, ifr: 0, landings: 0 }
     );
 
-    await prisma.profileStats.upsert({
+    await tx.profileStats.upsert({
       where: { userId: internalUser.id },
       update: {
         totalTime: totals.totalTime,
@@ -406,7 +324,7 @@ export async function POST(req: Request) {
     });
 
     // Rebuild day aggregates (heatmap + cumulative chart source).
-    await prisma.flightDayAgg.deleteMany({ where: { userId: internalUser.id } });
+    await tx.flightDayAgg.deleteMany({ where: { userId: internalUser.id } });
     const dayMap = new Map<
       string,
       {
@@ -446,7 +364,7 @@ export async function POST(req: Request) {
       dayMap.set(key, cur);
     }
     if (dayMap.size) {
-      await prisma.flightDayAgg.createMany({
+      await tx.flightDayAgg.createMany({
         data: Array.from(dayMap.values()).map((d) => ({
           userId: internalUser.id,
           day: d.day,
@@ -463,25 +381,24 @@ export async function POST(req: Request) {
       });
     }
 
-    // Rebuild route aggregates. A single flight may emit multiple legs if route/remarks
-    // include intermediate airports; total time is distributed across those legs.
-    await prisma.routeAgg.deleteMany({ where: { userId: internalUser.id } });
+    // Rebuild route aggregates from endpoints and the dedicated LogTen route
+    // field only. Remarks remain displayable notes and are never mined.
+    await tx.routeAgg.deleteMany({ where: { userId: internalUser.id } });
     const routeMap = new Map<
       string,
       { fromIcao: string; toIcao: string; flightsCount: number; totalTime: number; lastFlownAt: Date | null }
     >();
     for (const f of flights) {
-      // Build legs using route/remarks when available. This makes KBTF->KBTF flights still produce map legs.
-      const legs = buildLegsForFlight(
-        {
-          fromIcao: f.fromIcao,
-          toIcao: f.toIcao,
-          route: (f as any).route ?? null,
-          remarks: (f as any).remarks ?? null,
-        },
-        knownAirportCodes,
-        missingAirportCodes,
-      );
+      const routeResult = buildAirportRouteLegs({
+        fromCode: f.fromIcao,
+        toCode: f.toIcao,
+        route: f.route,
+        loggedDistanceNm: f.distanceNm,
+        resolveAirport,
+      });
+      routeResult.unresolvedCodes.forEach((code) => missingAirportCodes.add(code));
+      if (routeResult.distanceMismatch) routeDistanceMismatchCount += 1;
+      const legs = routeResult.legs;
 
       const legCount = legs.length || 1;
       const perLegTime = (f.totalTime ?? 0) / legCount;
@@ -502,7 +419,7 @@ export async function POST(req: Request) {
       }
     }
     if (routeMap.size) {
-      await prisma.routeAgg.createMany({
+      await tx.routeAgg.createMany({
         data: Array.from(routeMap.values()).map((r) => ({
           userId: internalUser.id,
           fromIcao: r.fromIcao,
@@ -516,20 +433,29 @@ export async function POST(req: Request) {
     }
 
     // Persist import outcomes and warning payload for dashboard troubleshooting.
-    await prisma.importJob.update({
+    const warningPayload = {
+      ...(missingAirportCodes.size > 0
+        ? {
+            missingAirportCodes: Array.from(missingAirportCodes).sort(),
+            missingCount: missingAirportCodes.size,
+          }
+        : {}),
+      ...(routeDistanceMismatchCount > 0 ? { routeDistanceMismatchCount } : {}),
+      ...(skippedRows > 0 ? { skippedRows } : {}),
+    };
+    await tx.importJob.update({
       where: { id: job.id },
       data: {
         status: "SUCCEEDED",
         importedCount: flightsToCreate.length,
         missingAirportCodes: Array.from(missingAirportCodes).sort(),
         warnings:
-          missingAirportCodes.size > 0
-            ? { missingAirportCodes: Array.from(missingAirportCodes).sort(), missingCount: missingAirportCodes.size }
-            : Prisma.DbNull,
+          Object.keys(warningPayload).length > 0 ? warningPayload : Prisma.DbNull,
         error: null,
         finishedAt: new Date(),
       },
     });
+    }, { timeout: 60_000 });
 
     // Cleanup uploaded artifact after successful import to reduce blob storage growth.
     if (job.blobPathname || job.blobUrl) {
