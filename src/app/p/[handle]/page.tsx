@@ -6,6 +6,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { CumulativeHoursChart } from "@/components/CumulativeHoursChart";
+import CareerProfileHeader from "@/components/CareerProfileHeader";
 import FlightsMap from "@/components/FlightsMap";
 import ThemeScope from "@/components/ThemeScope";
 import { CurrencyCards } from "@/components/pilot/CurrencyCards";
@@ -36,21 +37,24 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       handle: true,
       displayName: true,
       headline: true,
+      currentRole: true,
+      homeBase: true,
+      isPublished: true,
     },
   });
 
-  if (!profile) {
+  if (!profile || !profile.isPublished) {
     return {
       title: "Pilot profile",
-      description:
-        "Explore pilot profiles on MyPilotPage with flight stats, route maps, and recency/currency snapshots.",
+      description: "This pilot profile is private.",
+      robots: { index: false, follow: false },
     };
   }
 
   const title = `${profile.displayName} (@${profile.handle})`;
   const description =
     profile.headline?.trim() ||
-    `View ${profile.displayName}'s pilot profile with recent activity, route history, and currency snapshots.`;
+    `View ${profile.displayName}'s professional pilot qualifications and flight experience.`;
   const imageUrl = `/p/${encodeURIComponent(profile.handle)}/opengraph-image`;
 
   return {
@@ -99,6 +103,21 @@ function parseFunFacts(raw: unknown): FunFact[] {
       } satisfies FunFact;
     })
     .filter(Boolean) as FunFact[];
+}
+
+function parseCareerHistory(raw: unknown) {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const value = item as Record<string, unknown>;
+    if (typeof value.role !== "string" || typeof value.employer !== "string") return [];
+    return [{
+      role: value.role,
+      employer: value.employer,
+      dates: typeof value.dates === "string" ? value.dates : "",
+      summary: typeof value.summary === "string" ? value.summary : "",
+    }];
+  });
 }
 
 function buildFallbackFunFacts(
@@ -216,6 +235,11 @@ export default async function PublicProfilePage({ params }: PageProps) {
     notFound();
   }
 
+  const isOwner = Boolean(userId && profile.user.clerkUserId === userId);
+  if (!profile.isPublished && !isOwner) {
+    notFound();
+  }
+
   const now = new Date();
   const startDayAgg = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 23, 1));
   const heatmapWindowStart = new Date(now);
@@ -225,25 +249,28 @@ export default async function PublicProfilePage({ params }: PageProps) {
   const currency180Start = new Date(now);
   currency180Start.setUTCDate(currency180Start.getUTCDate() - 180);
 
+  const needsStats = profile.showStats || profile.showActivity;
+  const needsDayAgg = profile.showStats || profile.showActivity;
+  const needsRoutes = profile.showRoutes;
+
   const [stats, dayAgg, routes, currencyFlights, recentFlights, tailNumbers, mapData] = await Promise.all([
-    prisma.profileStats.findUnique({
+    needsStats ? prisma.profileStats.findUnique({
       where: { userId: profile.user.id },
-    }),
-    prisma.flightDayAgg.findMany({
+    }) : Promise.resolve(null),
+    needsDayAgg ? prisma.flightDayAgg.findMany({
       where: { userId: profile.user.id, day: { gte: startDayAgg } },
       orderBy: { day: "asc" },
       select: { day: true, flightsCount: true, totalTime: true, landings: true },
-    }),
-    prisma.routeAgg.findMany({
+    }) : Promise.resolve([]),
+    needsRoutes ? prisma.routeAgg.findMany({
       where: { userId: profile.user.id },
       orderBy: [{ flightsCount: "desc" }, { lastFlownAt: "desc" }],
       take: 5,
       select: { fromIcao: true, toIcao: true, flightsCount: true, totalTime: true, lastFlownAt: true },
-    }),
-    prisma.flight.findMany({
+    }) : Promise.resolve([]),
+    profile.showRecentExperience ? prisma.flight.findMany({
       where: { userId: profile.user.id, flightDate: { gte: currency180Start } },
       orderBy: { flightDate: "desc" },
-      take: 200,
       select: {
         flightDate: true,
         fromIcao: true,
@@ -254,21 +281,21 @@ export default async function PublicProfilePage({ params }: PageProps) {
         dayLandings: true,
         nightLandings: true,
       },
-    }),
-    prisma.flight.findMany({
+    }) : Promise.resolve([]),
+    profile.showActivity ? prisma.flight.findMany({
       where: { userId: profile.user.id },
       orderBy: { flightDate: "desc" },
       take: 5,
       select: { flightDate: true, fromIcao: true, toIcao: true, totalTime: true, night: true, ifr: true },
-    }),
-    prisma.flight.findMany({
+    }) : Promise.resolve([]),
+    profile.showActivity ? prisma.flight.findMany({
       where: {
         userId: profile.user.id,
         tailNumber: { not: null },
       },
       select: { tailNumber: true },
-    }),
-    getUserMapData(profile.user.id),
+    }) : Promise.resolve([]),
+    profile.showRoutes ? getUserMapData(profile.user.id) : Promise.resolve({ airports: [], routes: [], missingAirports: [] }),
   ]);
 
   const heatmapData = dayAgg
@@ -327,7 +354,6 @@ export default async function PublicProfilePage({ params }: PageProps) {
         topTailFact,
       );
 
-  const isOwner = userId && profile.user.clerkUserId === userId;
   const airportLookup = new Map(mapData.airports.map((a) => [a.code, a]));
   const mapRoutes = mapData.routes
     .map((r) => {
@@ -371,48 +397,59 @@ export default async function PublicProfilePage({ params }: PageProps) {
     themeSecondary: profile.themeSecondary,
     themeGuardrails: profile.themeGuardrails,
   });
+  const careerHistory = profile.showCareerHistory ? parseCareerHistory(profile.careerHistory) : [];
 
   return (
     <ThemeScope settings={themeSettings} className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-12">
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-4 shadow-sm sm:p-6">
-          <div className="space-y-1">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--muted-2)]">Pilot profile</p>
-            <h1 className="text-4xl font-semibold text-[var(--text)]">{profile.displayName}</h1>
-            <p className="text-[var(--muted)]">@{profile.handle}</p>
-            <p className="text-sm text-[var(--muted-2)]">
-              {profile.headline ?? "Headline coming soon."}
-            </p>
+        {isOwner ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--panel-muted)] px-4 py-3 text-sm">
+            <p className="font-semibold text-[var(--text)]">{profile.isPublished ? "Visitor-view preview · This profile is published" : "Private visitor-view preview · Only you can see this"}</p>
+            <Link href="/dashboard/settings" className="font-semibold text-[var(--accent)] hover:underline">Edit privacy and profile</Link>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {profile.resumeUrl ? (
-              <a
-                href={profile.resumeUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-text)] transition hover:opacity-90"
-              >
-                Download resume
-              </a>
-            ) : null}
-            {isOwner ? (
-              <Link
-                href="/dashboard/settings"
-                className="rounded-full border border-[var(--border)] bg-[var(--panel-muted)] px-4 py-2 text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--panel)]"
-              >
-                Edit settings
-              </Link>
-            ) : null}
-          </div>
-        </div>
+        ) : null}
 
-        <StatsCards stats={stats} />
+        <CareerProfileHeader
+          displayName={profile.displayName}
+          handle={profile.handle}
+          currentRole={profile.currentRole}
+          homeBase={profile.homeBase}
+          headline={profile.headline}
+          availability={profile.showAvailability ? profile.availability : null}
+          contactEmail={profile.showContact ? profile.contactEmail : null}
+          resumeUrl={profile.showResume ? profile.resumeUrl : null}
+          qualificationGroups={profile.showQualifications ? [
+            { label: "Certificates", values: profile.certificates },
+            { label: "Type ratings", values: profile.typeRatings },
+            { label: "Readiness", values: [profile.medical, profile.workAuthorization].filter((value): value is string => Boolean(value)) },
+          ] : []}
+        />
 
-        <CumulativeHoursChart data={cumulativeChartData} totalHours={stats?.totalTime ?? 0} />
+        {careerHistory.length > 0 ? (
+          <section className="rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm sm:p-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-2)]">Career</p>
+            <h2 className="mt-1 text-2xl font-semibold text-[var(--text)]">Professional experience</h2>
+            <div className="mt-6 divide-y divide-[var(--border)]">
+              {careerHistory.map((role, index) => (
+                <article key={`${role.role}-${role.employer}-${index}`} className="grid gap-2 py-5 first:pt-0 sm:grid-cols-[1fr_auto]">
+                  <div>
+                    <h3 className="font-semibold text-[var(--text)]">{role.role} · {role.employer}</h3>
+                    {role.summary ? <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--muted)]">{role.summary}</p> : null}
+                  </div>
+                  {role.dates ? <p className="text-sm font-semibold text-[var(--muted-2)]">{role.dates}</p> : null}
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
-        <CurrencyCards flights={currencyFlights} window90Start={currency90Start} window180Start={currency180Start} />
+        {profile.showStats ? <StatsCards stats={stats} /> : null}
 
-        <div className="rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-4 shadow-sm sm:p-6">
+        {profile.showStats ? <CumulativeHoursChart data={cumulativeChartData} totalHours={stats?.totalTime ?? 0} /> : null}
+
+        {profile.showRecentExperience ? <CurrencyCards flights={currencyFlights} window90Start={currency90Start} window180Start={currency180Start} /> : null}
+
+        {profile.showRoutes ? <div className="rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-4 shadow-sm sm:p-6">
           <div className="flex items-baseline justify-between gap-4">
             <div>
               <h2 className="text-lg font-semibold text-[var(--text)]">Routes map</h2>
@@ -434,19 +471,19 @@ export default async function PublicProfilePage({ params }: PageProps) {
               Some airports are missing coordinates: {missingAirportsNote}
             </p>
           ) : null}
-        </div>
-        <div className="grid gap-4 lg:grid-cols-3">
-          <div className="min-w-0 lg:col-span-2">
+        </div> : null}
+        {profile.showActivity || profile.showRoutes ? <div className="grid gap-4 lg:grid-cols-3">
+          {profile.showActivity ? <div className={`min-w-0 ${profile.showRoutes ? "lg:col-span-2" : "lg:col-span-3"}`}>
             <Heatmap data={heatmapData} />
-          </div>
-          <div className="min-w-0 lg:col-span-1">
+          </div> : null}
+          {profile.showRoutes ? <div className={`min-w-0 ${profile.showActivity ? "lg:col-span-1" : "lg:col-span-3"}`}>
             <RoutesTable routes={routes} />
-          </div>
-        </div>
+          </div> : null}
+        </div> : null}
 
-        <FunFacts facts={fallbackFacts} />
+        {profile.showActivity ? <FunFacts facts={fallbackFacts} /> : null}
 
-        <RecentFlights flights={recentFlights} />
+        {profile.showActivity ? <RecentFlights flights={recentFlights} /> : null}
 
       </div>
     </ThemeScope>

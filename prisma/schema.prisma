@@ -53,6 +53,15 @@ model Profile {
   handle          String    @unique @db.Citext
   displayName     String
   headline        String?
+  currentRole     String?
+  homeBase        String?
+  availability    String?
+  contactEmail    String?   @db.Citext
+  certificates    String[]  @default([])
+  typeRatings     String[]  @default([])
+  medical         String?
+  workAuthorization String?
+  careerHistory   Json?
   resumeUrl       String?
   resumePathname  String?
   resumeFilename  String?
@@ -60,6 +69,16 @@ model Profile {
   themePrimary    String?
   themeSecondary  String?
   themeGuardrails Boolean   @default(true)
+  isPublished     Boolean   @default(false)
+  showQualifications Boolean @default(false)
+  showAvailability Boolean  @default(false)
+  showContact     Boolean   @default(false)
+  showCareerHistory Boolean @default(false)
+  showStats       Boolean   @default(false)
+  showRecentExperience Boolean @default(false)
+  showRoutes      Boolean   @default(false)
+  showActivity    Boolean   @default(false)
+  showResume      Boolean   @default(false)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 }

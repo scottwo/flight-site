@@ -36,22 +36,22 @@ export default async function DashboardPage() {
         <header className="space-y-3">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--muted-2)]">Dashboard</p>
           <h1 className="text-4xl font-semibold text-[var(--text)]">Welcome, {displayName}</h1>
-          <p className="text-[var(--muted)]">Manage your pilot profile and public page.</p>
+          <p className="text-[var(--muted)]">Build a recruiter-ready career profile and publish only what you choose.</p>
         </header>
 
         <section className="grid gap-6 md:grid-cols-2">
           <div className="rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-[var(--text)]">Public page</h2>
+            <h2 className="text-lg font-semibold text-[var(--text)]">Career profile</h2>
             {handle ? (
               <p className="mt-2 text-sm text-[var(--muted)]">
-                Your public page:{" "}
+                {user?.profile?.isPublished ? "Published at: " : "Private preview: "}
                 <Link href={`/p/${handle}`} className="font-semibold text-[var(--accent)] hover:underline">
                   /p/{handle}
                 </Link>
               </p>
             ) : (
               <p className="mt-2 text-sm text-[var(--muted)]">
-                We have not created your profile yet. Save settings or hit <code>/api/private/me</code> to bootstrap.
+                Your private profile is being prepared.
               </p>
             )}
             <div className="mt-4 flex flex-wrap gap-3">
@@ -71,7 +71,7 @@ export default async function DashboardPage() {
                 href="/p/me"
                 className="rounded-full border border-[var(--border)] bg-[var(--panel)] px-4 py-2 text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--panel-muted)]"
               >
-                View my page
+                Preview visitor view
               </Link>
             </div>
           </div>
@@ -79,10 +79,10 @@ export default async function DashboardPage() {
           <div className="rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-[var(--text)]">Next steps</h2>
             <ul className="mt-3 space-y-2 text-sm text-[var(--muted)]">
-              <li>• Confirm your handle and display name in Settings.</li>
-              <li>• Upload and import your logbook in Import data.</li>
-              <li>• Upload your resume in Settings.</li>
-              <li>• Share your public link!</li>
+              <li>1. Add your role, base, qualifications, and availability.</li>
+              <li>2. Import your logbook and review the supported totals.</li>
+              <li>3. Choose which sensitive sections can be public.</li>
+              <li>4. Preview the visitor view, then publish when ready.</li>
             </ul>
           </div>
         </section>

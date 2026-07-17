@@ -2,6 +2,7 @@ import FlightsMap from "@/components/FlightsMap";
 import FunFacts from "@/components/FunFacts";
 import { CumulativeHoursChart } from "@/components/CumulativeHoursChart";
 import ThemeScope from "@/components/ThemeScope";
+import CareerProfileHeader from "@/components/CareerProfileHeader";
 import { formatCount, formatHours, getHeatmap, getStats } from "@/lib/stats";
 import { getRoutes } from "@/lib/routes";
 
@@ -85,23 +86,18 @@ export async function PilotProfilePage({
     {
       title: "Day (last 90 days)",
       value: `${formatCount(currency.day.landings)} landings`,
-      requirement: currency.day.requirement,
       window: `${formatDate(currency.windows.dayNight90dStart)}–${formatDate(currency.windows.dayNight90dEnd)}`,
-      current: currency.day.meetsPassengerCarry,
     },
     {
       title: "Night (last 90 days)",
       value: `${formatCount(currency.night.landings)} landings`,
-      requirement: currency.night.requirement,
       window: `${formatDate(currency.windows.dayNight90dStart)}–${formatDate(currency.windows.dayNight90dEnd)}`,
-      current: currency.night.meetsPassengerCarry,
     },
     {
       title: "IFR (last 6 cal months)",
       value: `${formatCount(currency.ifr.approaches)} approaches / ${formatCount(currency.ifr.holds)} holds`,
-      requirement: "Need ≥6 approaches plus holding within the last 6 calendar months (intercept/track not tracked here).",
+      requirement: "Imported approaches and holds only; intercept/track and other required conditions are not verified.",
       window: `${formatDate(currency.windows.ifr6CalMoStart)}–${formatDate(currency.windows.ifr6CalMoEndExclusive)}`,
-      current: currency.ifr.meetsTrackedItems,
     },
   ];
   const monthlyTotals = [...stats.monthly]
@@ -195,18 +191,27 @@ export async function PilotProfilePage({
   return (
     <ThemeScope className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-10 sm:gap-10 sm:px-6 sm:py-16">
-        <header className="space-y-3">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--muted-2)]">
-            Pilot Profile
-          </p>
-          <h1 className="text-4xl font-semibold text-[var(--text)] sm:text-5xl">
-            Flight hours and ratings snapshot
-          </h1>
-        </header>
+        <CareerProfileHeader
+          displayName="Maya Chen"
+          currentRole="CRJ-900 Captain"
+          homeBase="Denver, CO"
+          headline="Part 121 captain with mountain, winter, and high-density airport experience, preparing for a major-airline transition."
+          availability="Actively interviewing · Available with 30 days notice"
+          contactEmail="maya.chen@example.com"
+          snapshotUrl="/demo/maya-chen-recruiter-snapshot.pdf"
+          qualificationGroups={[
+            { label: "Certificates", values: ["ATP", "CFI", "CFII", "MEI"] },
+            { label: "Type ratings", values: ["CL-65"] },
+            { label: "Readiness", values: ["First Class Medical", "US Passport", "FCC Restricted Radiotelephone"] },
+          ]}
+        />
 
         <section className="grid grid-cols-1">
           <main className="w-full rounded-3xl border border-[var(--border)] bg-[var(--panel)] px-4 py-6 shadow-sm sm:px-6 sm:py-10 md:col-span-3">
-            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Pilot</h1>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-2)]">Application snapshot</p>
+              <h2 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">Flight experience</h2>
+            </div>
 
             <section className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {summaryCards.map((card) => (
@@ -266,8 +271,8 @@ export async function PilotProfilePage({
             <section className="mt-12 grid gap-6 lg:grid-cols-2">
               <div className="min-w-0 space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-4 shadow-sm sm:p-6">
                 <div className="space-y-1">
-                  <h2 className="text-2xl font-semibold text-[var(--text)]">Currency</h2>
-                  <p className="text-sm text-[var(--muted-2)]">Pulled from your latest LogTen export.</p>
+                  <h2 className="text-2xl font-semibold text-[var(--text)]">Recent experience</h2>
+                  <p className="text-sm text-[var(--muted-2)]">Imported activity only; no regulatory currency conclusion is made.</p>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   {currencyItems.map((item) => (
@@ -275,23 +280,14 @@ export async function PilotProfilePage({
                       key={item.title}
                       className="rounded-2xl border border-[var(--border)] bg-[var(--panel-muted)] p-4 shadow-sm"
                     >
-                      <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+                      <div>
                         <div>
                           <p className="text-sm font-semibold text-[var(--text)]">{item.title}</p>
                           <p className="text-xs text-[var(--muted)] sm:text-sm">{item.window}</p>
                         </div>
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                            item.current
-                              ? "border border-emerald-400/40 bg-emerald-500/15 text-emerald-300"
-                              : "border border-amber-400/40 bg-amber-500/15 text-amber-200"
-                          }`}
-                        >
-                          {item.current ? "Current" : "Out of Currency"}
-                        </span>
                       </div>
                       <div className="mt-2 text-2xl font-semibold text-[var(--text)]">{item.value}</div>
-                      <p className="text-sm text-[var(--muted-2)]">{item.requirement}</p>
+                      {item.requirement ? <p className="text-sm text-[var(--muted-2)]">{item.requirement}</p> : null}
                     </div>
                   ))}
                 </div>
@@ -376,11 +372,11 @@ export async function PilotProfilePage({
         <section className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-4 shadow-sm sm:p-6">
             <div className="space-y-2">
-              <h2 className="text-2xl font-semibold text-[var(--text)]">Current Training Status</h2>
+              <h2 className="text-2xl font-semibold text-[var(--text)]">Qualifications</h2>
             </div>
             <ul className="space-y-3 text-sm text-[var(--muted)]">
-              <li>Fleet focus: A320/B737 family (Delta mainline)</li>
-              <li>Line-qualified on domestic trunk routes; ETOPS familiarization complete</li>
+              <li>ATP | CFI | CFII | MEI | CL-65 type rating</li>
+              <li>CRJ-700/900 line captain; check airman mentorship program participant</li>
               <li>First Class Medical | Passport ready | FCC Radiotelephone License</li>
             </ul>
           </div>
@@ -390,7 +386,7 @@ export async function PilotProfilePage({
               <h2 className="text-2xl font-semibold text-[var(--text)]">Operational experience</h2>
             </div>
             <ul className="space-y-3 text-sm text-[var(--muted)]">
-              <li>Hub-and-spoke ops across SLC, MSP, ATL, JFK/LGA, SEA, DEN</li>
+              <li>Part 121 hub-and-spoke operations across DEN, DFW, PHX, ORD, and LAX</li>
               <li>Mountain ops into SLC/BOI/COS; winter operations and de-ice coordination</li>
               <li>Busy airspace: JFK/LGA/EWR/BOS/DC metros; RNAV/RNP and ILS proficiency</li>
               <li>High-altitude departures/arrivals; standard push/turn times at busy hubs</li>
@@ -406,22 +402,22 @@ export async function PilotProfilePage({
             <div className="space-y-4">
               {[
               {
-                title: "First Officer",
-                org: "Delta Air Lines (A320/B737)",
+                title: "Captain",
+                org: "SkyWest Airlines (CRJ-700/900)",
                 detail:
-                  "Line flying across domestic network; partnered with captains and crew on SOP refinement and winter ops readiness.",
+                  "PIC responsibility in Part 121 operations, with an emphasis on stable decision-making, crew development, and reliable winter operations.",
               },
               {
                 title: "First Officer",
-                org: "Regional partner (CRJ/ERJ)",
+                org: "SkyWest Airlines (CRJ-700/900)",
                 detail:
-                  "High-frequency flying into mountain and coastal airports; led brief/debrief habits that carried to mainline.",
+                  "High-frequency mountain and coastal flying; upgraded after building consistent line, CRM, and irregular-operations experience.",
               },
               {
-                  title: "Dispatcher / Ops support",
-                  org: "Charter operator",
+                  title: "Flight Instructor",
+                  org: "Front Range Flight Academy",
                   detail:
-                    "Coordinated slots, fuel, and MEL/CDL considerations; supported crews with weather and alternate planning.",
+                    "Delivered private through commercial and instrument instruction while building a strong foundation in risk management and clear cockpit communication.",
                 },
               ].map((role) => (
                 <div
@@ -439,11 +435,11 @@ export async function PilotProfilePage({
           </div>
 
           <div className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-4 shadow-sm sm:p-6">
-            <h2 className="text-2xl font-semibold text-[var(--text)]">Training Milestones</h2>
+            <h2 className="text-2xl font-semibold text-[var(--text)]">Career milestones</h2>
             <ul className="space-y-3 text-sm text-[var(--muted)]">
               <li>ATP/CTP complete; First Class Medical</li>
-              <li>A320/B737 differences training | RVSM/ETOPS familiarization</li>
-              <li>Recurrent sims: stalls/UAS, upset recovery, RTO, engine-out drift-down</li>
+              <li>CL-65 type rating and Part 121 captain upgrade complete</li>
+              <li>Recurrent sims: stalls/UAS, upset recovery, RTO, and engine-out procedures</li>
               <li>Emergency equipment/CRM refreshers each cycle</li>
               <li>FCC Radiotelephone: Yes</li>
             </ul>

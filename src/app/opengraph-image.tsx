@@ -43,11 +43,11 @@ export default function OpenGraphImage() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: "88%" }}>
           <div style={{ display: "flex", flexDirection: "column", fontSize: 74, fontWeight: 800, lineHeight: 1.05 }}>
-            <span>Your logbook,</span>
-            <span>beautifully presented</span>
+            <span>Your pilot career,</span>
+            <span>ready to share</span>
           </div>
           <div style={{ fontSize: 34, opacity: 0.9 }}>
-            Flight stats, routes, currency, and recent activity in one shareable profile.
+            A living, recruiter-ready pilot resume powered by your logbook.
           </div>
         </div>
 

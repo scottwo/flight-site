@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import DeleteAccountSection from "@/components/DeleteAccountSection";
+import CareerProfileEditor from "@/components/CareerProfileEditor";
 import HandleEditor from "@/components/HandleEditor";
 import HeadlineEditor from "@/components/HeadlineEditor";
 import ResumeUploader from "@/components/ResumeUploader";
@@ -24,7 +25,27 @@ export default async function SettingsPage() {
       profile: {
         select: {
           handle: true,
+          displayName: true,
           headline: true,
+          currentRole: true,
+          homeBase: true,
+          availability: true,
+          contactEmail: true,
+          certificates: true,
+          typeRatings: true,
+          medical: true,
+          workAuthorization: true,
+          careerHistory: true,
+          isPublished: true,
+          showQualifications: true,
+          showAvailability: true,
+          showContact: true,
+          showCareerHistory: true,
+          showStats: true,
+          showRecentExperience: true,
+          showRoutes: true,
+          showActivity: true,
+          showResume: true,
           resumeUrl: true,
           resumeFilename: true,
           themeMode: true,
@@ -53,7 +74,7 @@ export default async function SettingsPage() {
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--muted-2)]">Settings</p>
           <h1 className="text-3xl font-semibold text-[var(--text)]">Profile settings</h1>
           <p className="text-sm text-[var(--muted)]">
-            Stubbed sections for handle, display name, theme, layout, and data import. Editing coming soon.
+            Build your career profile, choose exactly what recruiters can see, and publish only when you are ready.
           </p>
         </header>
 
@@ -70,6 +91,14 @@ export default async function SettingsPage() {
               Loading profile...
             </div>
           )}
+        </section>
+
+        <section className="space-y-5 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
+          <div>
+            <h2 className="text-lg font-semibold text-[var(--text)]">Career profile and publication</h2>
+            <p className="mt-1 text-sm text-[var(--muted)]">Identity, qualifications, availability, contact, and section-level privacy.</p>
+          </div>
+          {profile ? <CareerProfileEditor handle={profile.handle} initialValues={profile} /> : null}
         </section>
 
         <section className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
@@ -89,11 +118,6 @@ export default async function SettingsPage() {
               Loading theme settings...
             </div>
           )}
-        </section>
-
-        <section className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-[var(--text)]">Layout</h2>
-          <p className="text-sm text-[var(--muted)]">Toggles for heatmap, map, fun facts (coming soon).</p>
         </section>
 
         <section className="space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">

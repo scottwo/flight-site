@@ -22,12 +22,18 @@ export default async function HandleOpenGraphImage({ params }: Props) {
       handle: true,
       displayName: true,
       headline: true,
+      currentRole: true,
+      homeBase: true,
+      isPublished: true,
     },
   });
 
-  const displayName = profile?.displayName ?? "Pilot";
-  const displayHandle = profile?.handle ?? handle;
-  const headline = profile?.headline || "Flight stats, routes, currency, and recent activity.";
+  const isPublic = profile?.isPublished === true;
+  const displayName = isPublic ? profile.displayName : "Private pilot profile";
+  const displayHandle = isPublic ? profile.handle : "private";
+  const headline = isPublic
+    ? profile.headline || [profile.currentRole, profile.homeBase].filter(Boolean).join(" · ") || "Professional pilot profile"
+    : "This profile has not been published.";
 
   return new ImageResponse(
     (

@@ -19,14 +19,14 @@ export const metadata: Metadata = {
     template: "%s | MyPilotPage",
   },
   description:
-    "Upload your logbook, pick your style, and share a polished pilot profile with stats, routes, currency, and recent activity.",
+    "Build a living, recruiter-ready pilot resume powered by your logbook, with private-by-default sharing controls.",
   openGraph: {
     type: "website",
     siteName: "MyPilotPage",
     url: "https://www.mypilotpage.com",
-    title: "MyPilotPage - Your logbook, beautifully presented",
+    title: "MyPilotPage - A living pilot resume powered by your logbook",
     description:
-      "Upload your logbook, pick your style, and share a polished pilot profile with stats, routes, currency, and recent activity.",
+      "Put qualifications, availability, and contact first, then support your career story with logbook-powered experience.",
     images: [
       {
         url: "/opengraph-image",
@@ -38,9 +38,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "MyPilotPage - Your logbook, beautifully presented",
+    title: "MyPilotPage - A living pilot resume powered by your logbook",
     description:
-      "Upload your logbook, pick your style, and share a polished pilot profile with stats, routes, currency, and recent activity.",
+      "Put qualifications, availability, and contact first, then support your career story with logbook-powered experience.",
     images: ["/opengraph-image"],
   },
 };
@@ -64,8 +64,12 @@ export default async function RootLayout({
       <html lang="en" suppressHydrationWarning>
         <body className="antialiased bg-[var(--bg)] text-[var(--text)]">
           <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[color-mix(in srgb,var(--panel) 85%,transparent)] backdrop-blur">
-            <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
-              <Link href="/" className="text-base font-semibold text-[var(--text)] sm:text-lg">
+            <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
+              <Link href="/" className="inline-flex items-center gap-2.5 text-base font-semibold tracking-tight text-[var(--text)] sm:text-lg">
+                <span className="relative flex h-7 w-7 items-center justify-center rounded-lg border border-[color-mix(in_srgb,var(--accent)_38%,var(--border))] bg-[color-mix(in_srgb,var(--accent)_12%,var(--panel))]" aria-hidden="true">
+                  <span className="h-px w-4 -rotate-45 bg-[var(--accent)]" />
+                  <span className="absolute h-1.5 w-1.5 rounded-full border border-[var(--accent)] bg-[var(--panel)]" />
+                </span>
                 MyPilotPage
               </Link>
 
@@ -83,12 +87,12 @@ export default async function RootLayout({
                   Demo
                 </Link>
                 <SignedOut>
-                  {/* <Link
+                  <Link
                     href="/pricing"
                     className="rounded-full px-4 py-2 transition hover:bg-[var(--panel-muted)] hover:text-[var(--text-strong)]"
                   >
                     Pricing
-                  </Link> */}
+                  </Link>
                 </SignedOut>
                 <SignedIn>
                   {myHandle ? (
@@ -176,27 +180,19 @@ export default async function RootLayout({
             </div>
           </header>
           {children}
-          <footer className="mt-12 border-t border-[var(--border)] bg-[color-mix(in srgb,var(--panel) 85%,transparent)]">
-            <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-6 py-6 text-sm text-[var(--muted)]">
-              <Link href="/" className="hover:text-[var(--text-strong)]">
-                Home
-              </Link>
-              <span className="text-[var(--muted-2)]">•</span>
-              {/* <Link href="/pricing" className="hover:text-[var(--text-strong)]">
-                Pricing
-              </Link> */}
-              {/* <span className="text-[var(--muted-2)]">•</span> */}
-              <Link href="/privacy" className="hover:text-[var(--text-strong)]">
-                Privacy
-              </Link>
-              <span className="text-[var(--muted-2)]">•</span>
-              <Link href="/terms" className="hover:text-[var(--text-strong)]">
-                Terms
-              </Link>
-              <span className="text-[var(--muted-2)]">•</span>
-              <Link href="/contact" className="hover:text-[var(--text-strong)]">
-                Contact
-              </Link>
+          <footer className="border-t border-[var(--border)] bg-[color-mix(in srgb,var(--panel) 85%,transparent)]">
+            <div className="mx-auto flex max-w-7xl flex-col gap-5 px-6 py-8 text-sm text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between lg:px-8">
+              <div>
+                <p className="font-semibold text-[var(--text)]">MyPilotPage</p>
+                <p className="mt-1 text-xs">A living pilot resume, powered by your logbook.</p>
+              </div>
+              <div className="flex flex-wrap gap-5 text-xs font-semibold">
+                <Link href="/" className="hover:text-[var(--text-strong)]">Home</Link>
+                <Link href="/pricing" className="hover:text-[var(--text-strong)]">Pricing</Link>
+                <Link href="/privacy" className="hover:text-[var(--text-strong)]">Privacy</Link>
+                <Link href="/terms" className="hover:text-[var(--text-strong)]">Terms</Link>
+                <Link href="/contact" className="hover:text-[var(--text-strong)]">Contact</Link>
+              </div>
             </div>
           </footer>
         </body>

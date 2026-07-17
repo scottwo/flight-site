@@ -35,17 +35,14 @@ export function CurrencyCards({ flights, window90Start, window180Start }: Props)
   const cards = [
     {
       label: "Day landings",
-      current: dayLandingCount >= 3,
       detail: `${dayLandingCount} in last 90 days`,
     },
     {
       label: "Night landings",
-      current: nightLandingCount >= 3,
       detail: `${nightLandingCount} in last 90 days`,
     },
     {
-      label: "IFR",
-      current: ifr6Month > 0,
+      label: "Instrument time",
       detail: `${ifr6Month.toFixed(1)} hrs in last 6 months`,
     },
   ];
@@ -54,14 +51,14 @@ export function CurrencyCards({ flights, window90Start, window180Start }: Props)
     <section className="rounded-3xl border border-[var(--border)] bg-[var(--panel)] p-6 shadow-sm">
       <div className="mb-3 flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-[var(--text)]">Currency</h2>
+          <h2 className="text-lg font-semibold text-[var(--text)]">Recent experience</h2>
           <p className="text-sm text-[var(--muted)]">
             Day/Night window: {formatDateRange(window90Start, now)} • IFR window:{" "}
             {formatDateRange(window180Start, now)}
           </p>
         </div>
         <div className="rounded-full border border-[var(--border)] bg-[var(--panel-muted)] px-3 py-1 text-xs font-semibold text-[var(--muted-2)]">
-          Based on recent logbook
+          Logbook totals only
         </div>
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
@@ -70,24 +67,18 @@ export function CurrencyCards({ flights, window90Start, window180Start }: Props)
             key={card.label}
             className="flex flex-col gap-2 rounded-2xl border border-[var(--border)] bg-[var(--panel-muted)] p-4"
           >
-            <div className="flex items-center justify-between">
+            <div>
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted-2)]">
                 {card.label}
               </p>
-              <span
-                className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                  card.current
-                    ? "bg-[var(--accent)] text-[var(--accent-text)]"
-                    : "border border-[var(--border)] bg-[var(--panel)] text-[var(--text-strong)]"
-                }`}
-              >
-                {card.current ? "CURRENT" : "NOT CURRENT"}
-              </span>
             </div>
             <p className="text-sm font-semibold text-[var(--text)]">{card.detail}</p>
           </div>
         ))}
       </div>
+      <p className="mt-4 text-xs leading-5 text-[var(--muted)]">
+        These are imported activity totals, not a determination of FAA or employer currency. The logbook may not include every event or condition needed to make that assessment.
+      </p>
     </section>
   );
 }

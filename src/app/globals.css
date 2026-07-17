@@ -146,69 +146,37 @@ body {
   color: var(--text-strong);
 }
 
-.pretty-word-home {
-  position: relative;
-  display: inline-block;
-  padding: 0 0.12em;
-  background-image: linear-gradient(90deg, #ff4fd8 0%, #ff9b2f 25%, #ffee3a 50%, #44e3ff 75%, #7b61ff 100%);
-  background-size: 240% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  filter: drop-shadow(0 0 10px rgba(255, 79, 216, 0.45));
-  animation: pretty-shift-home 5s linear infinite;
+.landing-grid {
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--border) 42%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--border) 42%, transparent) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: linear-gradient(to bottom, black 0%, transparent 88%);
+  opacity: 0.38;
 }
 
-.pretty-spark-home {
-  position: absolute;
-  font-size: 0.38em;
-  line-height: 1;
-  color: #ffe97a;
-  text-shadow: 0 0 8px #ff5ad8;
-  animation: pretty-pop-home 1.8s ease-in-out infinite;
+.landing-glow {
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 20%, transparent) 0%, transparent 68%);
+  filter: blur(8px);
 }
 
-.pretty-spark-home-a {
-  top: -0.48em;
-  left: -0.42em;
+.landing-product {
+  transform: perspective(1400px) rotateY(-2deg) rotateX(1deg);
+  transform-origin: center;
 }
 
-.pretty-spark-home-b {
-  top: -0.52em;
-  right: 0.08em;
-  animation-delay: 0.4s;
+.landing-cta-glow {
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 22%, transparent) 0%, transparent 70%);
 }
 
-.pretty-spark-home-c {
-  right: -0.35em;
-  bottom: -0.24em;
-  animation-delay: 0.8s;
-}
-
-@keyframes pretty-shift-home {
-  0% {
-    background-position: 0% 50%;
-  }
-  100% {
-    background-position: 240% 50%;
-  }
-}
-
-@keyframes pretty-pop-home {
-  0%,
-  100% {
-    transform: translateY(0) scale(1);
-    opacity: 0.65;
-  }
-  50% {
-    transform: translateY(-0.16em) scale(1.2);
-    opacity: 1;
+@media (max-width: 1023px) {
+  .landing-product {
+    transform: none;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pretty-word-home,
-  .pretty-spark-home {
-    animation: none;
+  .landing-shell * {
+    scroll-behavior: auto !important;
   }
 }
